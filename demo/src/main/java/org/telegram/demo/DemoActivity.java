@@ -16,6 +16,7 @@ import org.telegram.ui.Components.AvatarDrawable;
 public class DemoActivity extends Activity implements ImageReceiver.ImageReceiverDelegate {
 
     private ImageView imageView;
+    private MyGLTextureView textureView;
 
     private int currentAccount = UserConfig.selectedAccount;
 
@@ -26,15 +27,15 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         imageView = new ImageView(this);
 
         FrameLayout containerLayout = new FrameLayout(this);
-        MyGLTextureView textureView = new MyGLTextureView(this);
+        textureView = new MyGLTextureView(this);
         FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(100), AndroidUtilities.dp(100));
         textureViewLp.topMargin = AndroidUtilities.dp(250);
         textureViewLp.leftMargin = AndroidUtilities.dp(100);
-        textureView.setAlpha(0.5f);
         containerLayout.addView(textureView, textureViewLp);
 
 
         FrameLayout.LayoutParams imageViewLayoutParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
+
         imageView.setLayoutParams(imageViewLayoutParams);
         containerLayout.addView(imageView);
 
@@ -64,6 +65,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
         Bitmap bitmap = imageReceiver.getBitmap();
         imageView.setImageBitmap(bitmap);
+        textureView.updateBitmap(bitmap);
     }
 
 }

@@ -1,6 +1,7 @@
 package org.telegram.demo;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
 import android.view.Surface;
@@ -9,11 +10,16 @@ import android.view.TextureView;
 import org.telegram.demo.utils.GlErrorChecker;
 import org.telegram.demo.utils.ShaderLoader;
 
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Queue;
+
 public class MyGLTextureView extends TextureView implements TextureView.SurfaceTextureListener {
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final GlErrorChecker glErrorChecker = new GlErrorChecker();
-    private final MyRenderer myRenderer = new MyRenderer(shaderLoader, glErrorChecker);
+    private MyRenderer myRenderer;
     private GLThread glThread;
+    private Queue<Runnable> glThreadActionsQueue = new ArrayDeque<>();
 
     public MyGLTextureView(Context context) {
         super(context);
@@ -32,11 +38,25 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
 
     private void init() {
         setSurfaceTextureListener(this);
+        try {
+            myRenderer = new MyRenderer(shaderLoader, glErrorChecker);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateBitmap(Bitmap bitmap) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateBitmap(bitmap);
+        });
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
         glThread = new GLThread(new Surface(surfaceTexture), myRenderer, width, height);
+        while (!glThreadActionsQueue.isEmpty()) {
+            glThreadActionsQueue.poll().run();
+        }
     }
 
     @Override
@@ -55,5 +75,13 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+    }
+
+    private void executeWhenGlThreadIsReady(Runnable action) {
+        if (glThread != null) {
+            action.run();
+        } else {
+            glThreadActionsQueue.add(action);
+        }
     }
 }

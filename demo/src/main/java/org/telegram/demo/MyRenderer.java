@@ -1,72 +1,131 @@
 package org.telegram.demo;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
-import android.opengl.Matrix;
+import android.opengl.GLUtils;
 
 import org.telegram.demo.utils.GlErrorChecker;
 import org.telegram.demo.utils.ShaderLoader;
 
 import java.io.IOException;
-
-import javax.microedition.khronos.egl.EGLConfig;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 public class MyRenderer implements TextureViewRenderer {
-    private final float[] mMVPMatrix = new float[16];//model view projection matrix
-    private final float[] mProjectionMatrix = new float[16];//projection mastrix
-    private final float[] mViewMatrix = new float[16];//view matrix
-    private final float[] mMVMatrix = new float[16];//model view matrix
-    private final float[] mModelMatrix = new float[16];//model  matrix
     private final ShaderLoader shaderLoader;
     private final GlErrorChecker glErrorChecker;
-    private Triangle mtriangle;
 
-    public MyRenderer(ShaderLoader shaderLoader, GlErrorChecker glErrorChecker) {
+    // Full-screen quad (X,Y,Z)
+    private final float[] verticesData = {
+            -1.0f, -1.0f, 0.0f,
+            1.0f, -1.0f, 0.0f,
+            -1.0f, 1.0f, 0.0f,
+            1.0f, 1.0f, 0.0f
+    };
+    // Texture coords
+    private final float[] texCoordsData = {
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+            0.0f, 0.0f,
+            1.0f, 0.0f
+    };
+    private FloatBuffer vertexBuffer;
+    private FloatBuffer texCoordBuffer;
+    private int program;
+
+    private int positionHandle;
+    private int texCoordHandle;
+    private int textureHandle;
+    private Integer textureId = null;
+
+    public MyRenderer(ShaderLoader shaderLoader, GlErrorChecker glErrorChecker) throws IOException {
         this.shaderLoader = shaderLoader;
         this.glErrorChecker = glErrorChecker;
     }
 
     @Override
     public void onSurfaceCreated() {
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+
+        vertexBuffer = ByteBuffer.allocateDirect(verticesData.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        vertexBuffer.put(verticesData).position(0);
+
+        texCoordBuffer = ByteBuffer.allocateDirect(texCoordsData.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        texCoordBuffer.put(texCoordsData).position(0);
+
+        int vertexShader, fragmentShader;
         try {
-            mtriangle = new Triangle(shaderLoader, glErrorChecker);
+            vertexShader = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
+            fragmentShader = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        program = GLES20.glCreateProgram();
+        GLES20.glAttachShader(program, vertexShader);
+        GLES20.glAttachShader(program, fragmentShader);
+        GLES20.glLinkProgram(program);
+        GLES20.glUseProgram(program);
+
+        positionHandle = GLES20.glGetAttribLocation(program, "aPosition");
+        texCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord");
+        textureHandle = GLES20.glGetUniformLocation(program, "uTexture");
+
+        glErrorChecker.checkGlError("onSurfaceCreated");
     }
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        // Adjust the view based on view window changes, such as screen rotation
         GLES20.glViewport(0, 0, width, height);
-        float ratio = (float) width / height;
-        float left = -ratio, right = ratio;
-        Matrix.frustumM(mProjectionMatrix, 0, left, right, -1.0f, 1.0f, 1.0f, 8.0f);
     }
 
     @Override
     public void onDrawFrame() {
-        // Draw background color
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        GLES20.glClearDepthf(1.0f);//set up the depth buffer
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);//enable depth test (so, it will not look through the surfaces)
-        GLES20.glDepthFunc(GLES20.GL_LEQUAL);//indicate what type of depth test
-        Matrix.setIdentityM(mMVPMatrix, 0);//set the model view projection matrix to an identity matrix
-        Matrix.setIdentityM(mMVMatrix, 0);//set the model view  matrix to an identity matrix
-        Matrix.setIdentityM(mModelMatrix, 0);//set the model matrix to an identity matrix
-        // Set the camera position (View matrix)
-        Matrix.setLookAtM(mViewMatrix, 0,
-                0.0f, 0f, 1.0f,//camera is at (0,0,1)
-                0f, 0f, 0f,//looks at the origin
-                0f, 1f, 0.0f);//head is down (set to (0,1,0) to look from the top)
-        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -5f);//move backward for 5 units
-        // Calculate the projection and view transformation
-        //calculate the model view matrix
-        Matrix.multiplyMM(mMVMatrix, 0, mViewMatrix, 0, mModelMatrix, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVMatrix, 0);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        if (mtriangle != null) {
-            mtriangle.draw(mMVPMatrix);
+        if (textureId != null) {
+            GLES20.glUseProgram(program);
+
+            GLES20.glEnableVertexAttribArray(positionHandle);
+            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+            glErrorChecker.checkGlError("positionHandle");
+
+            GLES20.glEnableVertexAttribArray(texCoordHandle);
+            GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
+            glErrorChecker.checkGlError("textCoordHandle");
+
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
+            GLES20.glUniform1i(textureHandle, 0);
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            glErrorChecker.checkGlError("drawArrays");
+            GLES20.glDisableVertexAttribArray(positionHandle);
+            GLES20.glDisableVertexAttribArray(texCoordHandle);
         }
+    }
+
+    @Override
+    public void onBitmapUpdate(Bitmap bitmap) {
+        if (bitmap != null) {
+            if (textureId != null) {
+                GLES20.glDeleteTextures(1, new int[]{textureId}, 0);
+                textureId = null;
+            }
+            textureId = createTexture(bitmap);
+        }
+    }
+
+    private int createTexture(Bitmap bitmap) {
+        int[] texIds = new int[1];
+        GLES20.glGenTextures(1, texIds, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texIds[0]);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+        glErrorChecker.checkGlError("createTexture");
+        return texIds[0];
     }
 }

@@ -1,5 +1,6 @@
 package org.telegram.demo;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -37,6 +38,10 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleOnSurfaceChangedImpl(w, h));
     }
 
+    public void updateBitmap(Bitmap bitmap) {
+        glThreadHandler.post(() -> handleUpdateBitmap(bitmap));
+    }
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
@@ -52,12 +57,6 @@ public class GLThread extends HandlerThread {
     private void handleDrawFrame() {
         eglHelper.makeCurrent();
 
-        // TODO remove
-        GLES20.glViewport(0, 0, width, height);
-        GLES20.glClearColor(0.3f, 0.8f, 0.6f, 1f);
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        // TODO remove
-
         renderer.onDrawFrame();
         eglHelper.swapBuffers();
 
@@ -67,5 +66,9 @@ public class GLThread extends HandlerThread {
     private void handleRequestStop() {
         eglHelper.releaseEGL();
         quitSafely();
+    }
+
+    private void handleUpdateBitmap(Bitmap bitmap) {
+        renderer.onBitmapUpdate(bitmap);
     }
 }
