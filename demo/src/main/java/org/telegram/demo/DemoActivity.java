@@ -3,7 +3,6 @@ package org.telegram.demo;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Handler;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -35,6 +34,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
 
 
         textureView = new MyGLTextureView(this);
+        textureView.updateZoom(1.4f);
         FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
         textureViewLp.topMargin = AndroidUtilities.dp(250);
         textureViewLp.leftMargin = AndroidUtilities.dp(100);
@@ -42,8 +42,8 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
 
         setContentView(containerLayout);
 
-        loadUserAvatarIntoImageView();
-        //loadStaticImageIntoImageView();
+        //loadUserAvatarIntoImageView();
+        loadStaticImageIntoImageView();
     }
 
     private void loadStaticImageIntoImageView() {

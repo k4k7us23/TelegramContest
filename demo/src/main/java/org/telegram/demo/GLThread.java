@@ -42,6 +42,10 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleUpdateBitmap(bitmap));
     }
 
+    public void updateZoom(float zoom) {
+        glThreadHandler.post(() -> handleUpdateZoom(zoom));
+    }
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
@@ -52,6 +56,15 @@ public class GLThread extends HandlerThread {
         eglHelper.initEGL();
         renderer.onSurfaceCreated();
         renderer.onSurfaceChanged(width, height);
+    }
+
+
+    private void handleUpdateBitmap(Bitmap bitmap) {
+        renderer.onBitmapUpdate(bitmap);
+    }
+
+    private void handleUpdateZoom(float zoom) {
+        renderer.onZoomUpdate(zoom);
     }
 
     private void handleDrawFrame() {
@@ -68,9 +81,5 @@ public class GLThread extends HandlerThread {
     private void handleRequestStop() {
         eglHelper.releaseEGL();
         quitSafely();
-    }
-
-    private void handleUpdateBitmap(Bitmap bitmap) {
-        renderer.onBitmapUpdate(bitmap);
     }
 }

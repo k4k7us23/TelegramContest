@@ -54,6 +54,12 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
         });
     }
 
+    public void updateZoom(float zoom) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateZoom(zoom);
+        });
+    }
+
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
         glThread = new GLThread(new Surface(surfaceTexture), myRenderer, width, height);

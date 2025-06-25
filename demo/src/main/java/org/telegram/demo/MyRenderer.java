@@ -40,6 +40,7 @@ public class MyRenderer implements TextureViewRenderer {
     private int aTexCoordHandle;
     private int uImageAspectHandle;
     private int uViewAspectHandle;
+    private int uZoomHandle;
     //endregion
 
     //region: Fragment shader
@@ -86,6 +87,7 @@ public class MyRenderer implements TextureViewRenderer {
         aTexCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord");
         uImageAspectHandle = GLES20.glGetUniformLocation(program, "uImageAspect");
         uViewAspectHandle = GLES20.glGetUniformLocation(program, "uViewAspect");
+        uZoomHandle = GLES20.glGetUniformLocation(program, "uZoom");
 
         uTextureHandle = GLES20.glGetUniformLocation(program, "uTexture");
 
@@ -118,7 +120,8 @@ public class MyRenderer implements TextureViewRenderer {
             float viewAspect = (float) viewWidth / (float) viewHeight;
             GLES20.glUniform1f(uImageAspectHandle, imageAspect);
             GLES20.glUniform1f(uViewAspectHandle, viewAspect);
-            glErrorChecker.checkGlError("uAspectHandlers");
+            GLES20.glUniform1f(uZoomHandle, zoom);
+            glErrorChecker.checkGlError("Image Position Uniforms");
 
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
