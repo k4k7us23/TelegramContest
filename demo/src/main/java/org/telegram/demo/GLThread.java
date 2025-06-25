@@ -60,6 +60,8 @@ public class GLThread extends HandlerThread {
         renderer.onDrawFrame();
         eglHelper.swapBuffers();
 
+        // TODO change to constant redraw
+        //glThreadHandler.postDelayed(this::handleDrawFrame, 200);
         glThreadHandler.post(this::handleDrawFrame);
     }
 

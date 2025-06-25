@@ -11,4 +11,6 @@ public interface TextureViewRenderer {
     void onDrawFrame();
 
     void onBitmapUpdate(Bitmap bitmap);
+
+    void onZoomUpdate(float zoom);
 }

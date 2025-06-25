@@ -32,12 +32,25 @@ public class MyRenderer implements TextureViewRenderer {
     };
     private FloatBuffer vertexBuffer;
     private FloatBuffer texCoordBuffer;
+
     private int program;
 
-    private int positionHandle;
-    private int texCoordHandle;
-    private int textureHandle;
+    //region: Vertex shader
+    private int aPositionHandle;
+    private int aTexCoordHandle;
+    private int uImageAspectHandle;
+    private int uViewAspectHandle;
+    //endregion
+
+    //region: Fragment shader
+    private int uTextureHandle;
     private Integer textureId = null;
+    //endregion
+
+    private int viewWidth, viewHeight;
+    private int bitmapWidth, bitmapHeight;
+
+    private float zoom = MyGLTextureView.DEFAULT_ZOOM;
 
     public MyRenderer(ShaderLoader shaderLoader, GlErrorChecker glErrorChecker) throws IOException {
         this.shaderLoader = shaderLoader;
@@ -69,9 +82,12 @@ public class MyRenderer implements TextureViewRenderer {
         GLES20.glLinkProgram(program);
         GLES20.glUseProgram(program);
 
-        positionHandle = GLES20.glGetAttribLocation(program, "aPosition");
-        texCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord");
-        textureHandle = GLES20.glGetUniformLocation(program, "uTexture");
+        aPositionHandle = GLES20.glGetAttribLocation(program, "aPosition");
+        aTexCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord");
+        uImageAspectHandle = GLES20.glGetUniformLocation(program, "uImageAspect");
+        uViewAspectHandle = GLES20.glGetUniformLocation(program, "uViewAspect");
+
+        uTextureHandle = GLES20.glGetUniformLocation(program, "uTexture");
 
         glErrorChecker.checkGlError("onSurfaceCreated");
     }
@@ -79,6 +95,8 @@ public class MyRenderer implements TextureViewRenderer {
     @Override
     public void onSurfaceChanged(int width, int height) {
         GLES20.glViewport(0, 0, width, height);
+        viewHeight = height;
+        viewWidth = width;
     }
 
     @Override
@@ -88,22 +106,28 @@ public class MyRenderer implements TextureViewRenderer {
         if (textureId != null) {
             GLES20.glUseProgram(program);
 
-            GLES20.glEnableVertexAttribArray(positionHandle);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-            glErrorChecker.checkGlError("positionHandle");
+            GLES20.glEnableVertexAttribArray(aPositionHandle);
+            GLES20.glVertexAttribPointer(aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+            glErrorChecker.checkGlError("aPositionHandle");
 
-            GLES20.glEnableVertexAttribArray(texCoordHandle);
-            GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
-            glErrorChecker.checkGlError("textCoordHandle");
+            GLES20.glEnableVertexAttribArray(aTexCoordHandle);
+            GLES20.glVertexAttribPointer(aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
+            glErrorChecker.checkGlError("aTextCoordHandle");
+
+            float imageAspect = (float) bitmapWidth / (float) bitmapHeight;
+            float viewAspect = (float) viewWidth / (float) viewHeight;
+            GLES20.glUniform1f(uImageAspectHandle, imageAspect);
+            GLES20.glUniform1f(uViewAspectHandle, viewAspect);
+            glErrorChecker.checkGlError("uAspectHandlers");
 
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
-            GLES20.glUniform1i(textureHandle, 0);
+            GLES20.glUniform1i(uTextureHandle, 0);
 
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
             glErrorChecker.checkGlError("drawArrays");
-            GLES20.glDisableVertexAttribArray(positionHandle);
-            GLES20.glDisableVertexAttribArray(texCoordHandle);
+            GLES20.glDisableVertexAttribArray(aPositionHandle);
+            GLES20.glDisableVertexAttribArray(aTexCoordHandle);
         }
     }
 
@@ -115,7 +139,15 @@ public class MyRenderer implements TextureViewRenderer {
                 textureId = null;
             }
             textureId = createTexture(bitmap);
+
+            bitmapWidth = bitmap.getWidth();
+            bitmapHeight = bitmap.getHeight();
         }
+    }
+
+    @Override
+    public void onZoomUpdate(float zoom) {
+        this.zoom = zoom;
     }
 
     private int createTexture(Bitmap bitmap) {

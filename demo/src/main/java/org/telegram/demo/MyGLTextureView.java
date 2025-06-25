@@ -15,6 +15,9 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class MyGLTextureView extends TextureView implements TextureView.SurfaceTextureListener {
+
+    static final float DEFAULT_ZOOM = 1f;
+
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final GlErrorChecker glErrorChecker = new GlErrorChecker();
     private MyRenderer myRenderer;

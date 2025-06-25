@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import org.telegram.demo.utils.BitmapUtils;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.UserConfig;
@@ -24,29 +25,31 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        imageView = new ImageView(this);
-
         FrameLayout containerLayout = new FrameLayout(this);
+
+        imageView = new ImageView(this);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        FrameLayout.LayoutParams imageViewLayoutParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
+        imageView.setLayoutParams(imageViewLayoutParams);
+        containerLayout.addView(imageView);
+
+
         textureView = new MyGLTextureView(this);
-        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(100), AndroidUtilities.dp(100));
+        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
         textureViewLp.topMargin = AndroidUtilities.dp(250);
         textureViewLp.leftMargin = AndroidUtilities.dp(100);
         containerLayout.addView(textureView, textureViewLp);
 
-
-        FrameLayout.LayoutParams imageViewLayoutParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
-
-        imageView.setLayoutParams(imageViewLayoutParams);
-        containerLayout.addView(imageView);
-
         setContentView(containerLayout);
 
-        new Handler().postDelayed(() -> {
-            textureViewLp.width = textureViewLp.height = AndroidUtilities.dp(200);
-            textureView.setLayoutParams(textureViewLp);
-        }, 5000);
-
         loadUserAvatarIntoImageView();
+        //loadStaticImageIntoImageView();
+    }
+
+    private void loadStaticImageIntoImageView() {
+        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "1.jpg");
+        imageView.setImageBitmap(bitmap);
+        textureView.updateBitmap(bitmap);
     }
 
     private void loadUserAvatarIntoImageView() {
