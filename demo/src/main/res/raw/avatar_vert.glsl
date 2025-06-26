@@ -16,9 +16,9 @@ void main() {
     float scaleY = 1.0;
 
     if (uViewAspect < uImageAspect) {
-        scaleX = uViewAspect / uImageAspect;
+        scaleX = uImageAspect / uViewAspect;
     } else {
-        scaleY = uImageAspect / uViewAspect;
+        scaleY = uViewAspect / uImageAspect;
     }
 
     vVertexScale = vec2(scaleX * uZoom, scaleY * uZoom);

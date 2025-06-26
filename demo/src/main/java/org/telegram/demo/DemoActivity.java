@@ -28,8 +28,8 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         super.onCreate(savedInstanceState);
 
         final int cornerRadius = AndroidUtilities.dp(75);
-        final int imageSize = AndroidUtilities.dp(150);
-        final float zoom = 2f;
+        final int imageSize = AndroidUtilities.dp(300);
+        final float zoom = 1.2f;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -68,7 +68,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     }
 
     private void loadStaticImageIntoImageView() {
-        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "2.png");
+        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "1.jpg");
         textureView.updateBitmap(bitmap);
         imageView.setImageBitmap(bitmap);
     }
