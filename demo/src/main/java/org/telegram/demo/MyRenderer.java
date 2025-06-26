@@ -45,6 +45,8 @@ public class MyRenderer implements TextureViewRenderer {
 
     //region: Fragment shader
     private int uTextureHandle;
+    private int uViewSizeHandle;
+    private int uCornerRadiusHandle;
     private Integer textureId = null;
     //endregion
 
@@ -52,6 +54,7 @@ public class MyRenderer implements TextureViewRenderer {
     private int bitmapWidth, bitmapHeight;
 
     private float zoom = MyGLTextureView.DEFAULT_ZOOM;
+    private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
 
     public MyRenderer(ShaderLoader shaderLoader, GlErrorChecker glErrorChecker) throws IOException {
         this.shaderLoader = shaderLoader;
@@ -60,7 +63,9 @@ public class MyRenderer implements TextureViewRenderer {
 
     @Override
     public void onSurfaceCreated() {
-        GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         vertexBuffer = ByteBuffer.allocateDirect(verticesData.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -90,6 +95,8 @@ public class MyRenderer implements TextureViewRenderer {
         uZoomHandle = GLES20.glGetUniformLocation(program, "uZoom");
 
         uTextureHandle = GLES20.glGetUniformLocation(program, "uTexture");
+        uViewSizeHandle = GLES20.glGetUniformLocation(program, "uViewSize");
+        uCornerRadiusHandle = GLES20.glGetUniformLocation(program, "uCornerRadius");
 
         glErrorChecker.checkGlError("onSurfaceCreated");
     }
@@ -123,6 +130,9 @@ public class MyRenderer implements TextureViewRenderer {
             GLES20.glUniform1f(uZoomHandle, zoom);
             glErrorChecker.checkGlError("Image Position Uniforms");
 
+            GLES20.glUniform2f(uViewSizeHandle, viewWidth, viewHeight);
+            GLES20.glUniform1f(uCornerRadiusHandle, cornerRadius);
+
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
             GLES20.glUniform1i(uTextureHandle, 0);
@@ -151,6 +161,11 @@ public class MyRenderer implements TextureViewRenderer {
     @Override
     public void onZoomUpdate(float zoom) {
         this.zoom = zoom;
+    }
+
+    @Override
+    public void onCornerRadiusUpdate(float cornerRadius) {
+        this.cornerRadius = cornerRadius;
     }
 
     private int createTexture(Bitmap bitmap) {

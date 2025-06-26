@@ -2,7 +2,10 @@ package org.telegram.demo;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.Outline;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -24,20 +27,38 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final int cornerRadius = AndroidUtilities.dp(75);
+        final int imageSize = AndroidUtilities.dp(150);
+        final float zoom = 2f;
+
         FrameLayout containerLayout = new FrameLayout(this);
 
         imageView = new ImageView(this);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        FrameLayout.LayoutParams imageViewLayoutParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
+        imageView.setScaleType(ImageView.ScaleType.MATRIX);
+
+        FrameLayout.LayoutParams imageViewLayoutParams = new FrameLayout.LayoutParams(imageSize, imageSize);
+        imageViewLayoutParams.leftMargin = AndroidUtilities.dp(10);
+        imageViewLayoutParams.topMargin = AndroidUtilities.dp(10);
         imageView.setLayoutParams(imageViewLayoutParams);
         containerLayout.addView(imageView);
 
 
+        imageView.setClipToOutline(true);
+        imageView.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(
+                        0, 0, view.getWidth(), view.getHeight(), cornerRadius);
+            }
+        });
+
+
         textureView = new MyGLTextureView(this);
-        textureView.updateZoom(1.4f);
-        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(200), AndroidUtilities.dp(200));
-        textureViewLp.topMargin = AndroidUtilities.dp(250);
-        textureViewLp.leftMargin = AndroidUtilities.dp(100);
+        textureView.updateZoom(zoom);
+        textureView.updateCornerRadius(cornerRadius);
+        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(imageSize, imageSize);
+        textureViewLp.topMargin = AndroidUtilities.dp(350);
+        textureViewLp.leftMargin = AndroidUtilities.dp(10);
         containerLayout.addView(textureView, textureViewLp);
 
         setContentView(containerLayout);
@@ -47,9 +68,9 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     }
 
     private void loadStaticImageIntoImageView() {
-        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "1.jpg");
-        imageView.setImageBitmap(bitmap);
+        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "2.png");
         textureView.updateBitmap(bitmap);
+        imageView.setImageBitmap(bitmap);
     }
 
     private void loadUserAvatarIntoImageView() {

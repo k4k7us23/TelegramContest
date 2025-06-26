@@ -17,6 +17,7 @@ import java.util.Queue;
 public class MyGLTextureView extends TextureView implements TextureView.SurfaceTextureListener {
 
     static final float DEFAULT_ZOOM = 1f;
+    static final float DEFAULT_CORNER_RADIUS = 0f;
 
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final GlErrorChecker glErrorChecker = new GlErrorChecker();
@@ -41,6 +42,7 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
 
     private void init() {
         setSurfaceTextureListener(this);
+        setOpaque(false);
         try {
             myRenderer = new MyRenderer(shaderLoader, glErrorChecker);
         } catch (IOException e) {
@@ -57,6 +59,12 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     public void updateZoom(float zoom) {
         executeWhenGlThreadIsReady(() -> {
             glThread.updateZoom(zoom);
+        });
+    }
+
+    public void updateCornerRadius(float cornerRadius) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateCornerRadius(cornerRadius);
         });
     }
 

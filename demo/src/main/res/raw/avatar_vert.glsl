@@ -7,6 +7,7 @@ uniform float uViewAspect;
 uniform float uZoom;
 
 varying vec2 vTexCoord;
+varying vec2 vVertexScale;
 
 void main() {
     float scaleX = 1.0;
@@ -18,6 +19,8 @@ void main() {
         scaleY = uImageAspect / uViewAspect;
     }
 
-    gl_Position = vec4(aPosition.x / scaleX * uZoom, aPosition.y / scaleY * uZoom, 0.0, 1.0);
+    vVertexScale = vec2(scaleX * uZoom, scaleY * uZoom);
+
+    gl_Position = vec4(aPosition.x * vVertexScale.x, aPosition.y * vVertexScale.y, 0.0, 1.0);
     vTexCoord = aTexCoord;
 }

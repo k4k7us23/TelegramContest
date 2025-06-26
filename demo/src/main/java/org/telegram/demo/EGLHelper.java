@@ -1,11 +1,10 @@
 package org.telegram.demo;
 
 import android.opengl.EGL14;
-import android.opengl.EGLExt;
-import android.opengl.EGLSurface;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
 import android.opengl.EGLDisplay;
+import android.opengl.EGLSurface;
 import android.view.Surface;
 
 public class EGLHelper {

@@ -1,7 +1,6 @@
 package org.telegram.demo;
 
 import android.graphics.Bitmap;
-import android.opengl.GLES20;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.Surface;
@@ -46,6 +45,10 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleUpdateZoom(zoom));
     }
 
+    public void updateCornerRadius(float cornerRadius) {
+        glThreadHandler.post(() -> handleUpdateCornerRadius(cornerRadius));
+    }
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
@@ -65,6 +68,10 @@ public class GLThread extends HandlerThread {
 
     private void handleUpdateZoom(float zoom) {
         renderer.onZoomUpdate(zoom);
+    }
+
+    private void handleUpdateCornerRadius(float cornerRadius) {
+        renderer.onCornerRadiusUpdate(cornerRadius);
     }
 
     private void handleDrawFrame() {

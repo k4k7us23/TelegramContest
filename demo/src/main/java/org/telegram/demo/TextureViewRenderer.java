@@ -13,4 +13,6 @@ public interface TextureViewRenderer {
     void onBitmapUpdate(Bitmap bitmap);
 
     void onZoomUpdate(float zoom);
+
+    void onCornerRadiusUpdate(float cornerRadius);
 }
