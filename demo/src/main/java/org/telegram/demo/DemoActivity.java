@@ -34,7 +34,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         FrameLayout containerLayout = new FrameLayout(this);
 
         imageView = new ImageView(this);
-        imageView.setScaleType(ImageView.ScaleType.MATRIX);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
         FrameLayout.LayoutParams imageViewLayoutParams = new FrameLayout.LayoutParams(imageSize, imageSize);
         imageViewLayoutParams.leftMargin = AndroidUtilities.dp(10);
