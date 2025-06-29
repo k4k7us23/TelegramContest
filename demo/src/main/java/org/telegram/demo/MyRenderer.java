@@ -53,8 +53,8 @@ class MyRenderer implements TextureViewRenderer {
     private int blurRadius = MyGLTextureView.DEFAULT_BLUR_RADIUS;
     //endregion
 
-    private CreateFBOResult createFBOResult;
-    private CreateFBOResult createFBOResult2;
+    private CreateFBOResult horizontalBlurFBOResult;
+    private CreateFBOResult verticalBlurFBOResult;
 
     public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
         this.avatarProgramFactory = avatarProgramFactory;
@@ -93,18 +93,18 @@ class MyRenderer implements TextureViewRenderer {
         viewHeight = height;
         viewWidth = width;
 
-        if (createFBOResult != null) {
-            deleteFBOTexture(createFBOResult);
-            createFBOResult = null;
+        if (horizontalBlurFBOResult != null) {
+            deleteFBOTexture(horizontalBlurFBOResult);
+            horizontalBlurFBOResult = null;
         }
 
-        if (createFBOResult2 != null) {
-            deleteFBOTexture(createFBOResult2);
-            createFBOResult2 = null;
+        if (verticalBlurFBOResult != null) {
+            deleteFBOTexture(verticalBlurFBOResult);
+            verticalBlurFBOResult = null;
         }
 
-        createFBOResult = createFBOTexture(viewWidth, viewHeight);
-        createFBOResult2 = createFBOTexture(viewWidth, viewHeight);
+        horizontalBlurFBOResult = createFBOTexture(viewWidth, viewHeight);
+        verticalBlurFBOResult = createFBOTexture(viewWidth, viewHeight);
     }
 
     @Override
@@ -112,10 +112,10 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         if (textureId != null) {
-            blurRenderPass(createFBOResult.FBOId, textureId, BlurDirection.Horizontal);
-            blurRenderPass(createFBOResult2.FBOId, createFBOResult.textureId, BlurDirection.Vertical);
+            blurRenderPass(horizontalBlurFBOResult.FBOId, textureId, BlurDirection.Horizontal);
+            blurRenderPass(verticalBlurFBOResult.FBOId, horizontalBlurFBOResult.textureId, BlurDirection.Vertical);
 
-            zoomAndCropRenderPass(createFBOResult2.textureId);
+            zoomAndCropRenderPass(verticalBlurFBOResult.textureId);
         }
     }
 
