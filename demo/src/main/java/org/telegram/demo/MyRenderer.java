@@ -40,9 +40,8 @@ public class MyRenderer implements TextureViewRenderer {
     //endregion
 
     //region: Fragment shader
-    private int uTextureHandle;
-    private int uViewSizeHandle;
-    private int uCornerRadiusHandle;
+    private AvatarFragmentShader fragmentShader;
+
     private Integer textureId = null;
     //endregion
 
@@ -71,24 +70,21 @@ public class MyRenderer implements TextureViewRenderer {
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         texCoordBuffer.put(texCoordsData).position(0);
 
-        int vertexShaderPtr, fragmentShader;
+        int vertexShaderPtr, fragmentShaderPtr;
         try {
             vertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
-            fragmentShader = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
+            fragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         program = GLES20.glCreateProgram();
         GLES20.glAttachShader(program, vertexShaderPtr);
-        GLES20.glAttachShader(program, fragmentShader);
+        GLES20.glAttachShader(program, fragmentShaderPtr);
         GLES20.glLinkProgram(program);
         GLES20.glUseProgram(program);
 
         vertexShader = new AvatarVertexShader(program);
-
-        uTextureHandle = GLES20.glGetUniformLocation(program, "uTexture");
-        uViewSizeHandle = GLES20.glGetUniformLocation(program, "uViewSize");
-        uCornerRadiusHandle = GLES20.glGetUniformLocation(program, "uCornerRadius");
+        fragmentShader = new AvatarFragmentShader(program);
 
         glErrorChecker.checkGlError("onSurfaceCreated");
     }
@@ -122,12 +118,12 @@ public class MyRenderer implements TextureViewRenderer {
             GLES20.glUniform1f(vertexShader.uZoomHandle, zoom);
             glErrorChecker.checkGlError("Image Position Uniforms");
 
-            GLES20.glUniform2f(uViewSizeHandle, viewWidth, viewHeight);
-            GLES20.glUniform1f(uCornerRadiusHandle, cornerRadius);
+            GLES20.glUniform2f(fragmentShader.uViewSizeHandle, viewWidth, viewHeight);
+            GLES20.glUniform1f(fragmentShader.uCornerRadiusHandle, cornerRadius);
 
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
-            GLES20.glUniform1i(uTextureHandle, 0);
+            GLES20.glUniform1i(fragmentShader.uTextureHandle, 0);
 
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
             glErrorChecker.checkGlError("drawArrays");
