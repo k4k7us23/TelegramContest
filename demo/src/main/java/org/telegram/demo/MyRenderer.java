@@ -12,8 +12,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class MyRenderer implements TextureViewRenderer {
-    private final ShaderLoader shaderLoader;
+class MyRenderer implements TextureViewRenderer {
+    private final AvatarProgramFactory avatarProgramFactory;
     private final GlErrorChecker glErrorChecker;
 
     // Full-screen quad (X,Y,Z)
@@ -49,8 +49,8 @@ public class MyRenderer implements TextureViewRenderer {
     private float zoom = MyGLTextureView.DEFAULT_ZOOM;
     private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
 
-    public MyRenderer(ShaderLoader shaderLoader, GlErrorChecker glErrorChecker) throws IOException {
-        this.shaderLoader = shaderLoader;
+    public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
+        this.avatarProgramFactory = avatarProgramFactory;
         this.glErrorChecker = glErrorChecker;
     }
 
@@ -68,14 +68,9 @@ public class MyRenderer implements TextureViewRenderer {
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         texCoordBuffer.put(texCoordsData).position(0);
 
-        int vertexShaderPtr, fragmentShaderPtr;
-        try {
-            vertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
-            fragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        zoomAndCropProgram = new ZoomAndCropProgram(vertexShaderPtr, fragmentShaderPtr);
+        avatarProgramFactory.onSurfaceCreated();
+
+        zoomAndCropProgram = avatarProgramFactory.zoomAndCropProgram;
 
         glErrorChecker.checkGlError("onSurfaceCreated");
     }

@@ -44,7 +44,7 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
         setSurfaceTextureListener(this);
         setOpaque(false);
         try {
-            myRenderer = new MyRenderer(shaderLoader, glErrorChecker);
+            myRenderer = new MyRenderer(new AvatarProgramFactory(shaderLoader), glErrorChecker);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

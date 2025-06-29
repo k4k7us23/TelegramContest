@@ -2,7 +2,7 @@ package org.telegram.demo;
 
 import android.opengl.GLES20;
 
-public class ZoomAndCropProgram {
+class ZoomAndCropProgram {
 
     public final int glProgram;
 
