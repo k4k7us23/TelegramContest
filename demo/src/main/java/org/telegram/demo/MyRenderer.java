@@ -36,11 +36,7 @@ public class MyRenderer implements TextureViewRenderer {
     private int program;
 
     //region: Vertex shader
-    private int aPositionHandle;
-    private int aTexCoordHandle;
-    private int uImageAspectHandle;
-    private int uViewAspectHandle;
-    private int uZoomHandle;
+    private AvatarVertexShader vertexShader;
     //endregion
 
     //region: Fragment shader
@@ -75,24 +71,20 @@ public class MyRenderer implements TextureViewRenderer {
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         texCoordBuffer.put(texCoordsData).position(0);
 
-        int vertexShader, fragmentShader;
+        int vertexShaderPtr, fragmentShader;
         try {
-            vertexShader = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
+            vertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
             fragmentShader = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         program = GLES20.glCreateProgram();
-        GLES20.glAttachShader(program, vertexShader);
+        GLES20.glAttachShader(program, vertexShaderPtr);
         GLES20.glAttachShader(program, fragmentShader);
         GLES20.glLinkProgram(program);
         GLES20.glUseProgram(program);
 
-        aPositionHandle = GLES20.glGetAttribLocation(program, "aPosition");
-        aTexCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord");
-        uImageAspectHandle = GLES20.glGetUniformLocation(program, "uImageAspect");
-        uViewAspectHandle = GLES20.glGetUniformLocation(program, "uViewAspect");
-        uZoomHandle = GLES20.glGetUniformLocation(program, "uZoom");
+        vertexShader = new AvatarVertexShader(program);
 
         uTextureHandle = GLES20.glGetUniformLocation(program, "uTexture");
         uViewSizeHandle = GLES20.glGetUniformLocation(program, "uViewSize");
@@ -115,19 +107,19 @@ public class MyRenderer implements TextureViewRenderer {
         if (textureId != null) {
             GLES20.glUseProgram(program);
 
-            GLES20.glEnableVertexAttribArray(aPositionHandle);
-            GLES20.glVertexAttribPointer(aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+            GLES20.glEnableVertexAttribArray(vertexShader.aPositionHandle);
+            GLES20.glVertexAttribPointer(vertexShader.aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
             glErrorChecker.checkGlError("aPositionHandle");
 
-            GLES20.glEnableVertexAttribArray(aTexCoordHandle);
-            GLES20.glVertexAttribPointer(aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
+            GLES20.glEnableVertexAttribArray(vertexShader.aTexCoordHandle);
+            GLES20.glVertexAttribPointer(vertexShader.aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
             glErrorChecker.checkGlError("aTextCoordHandle");
 
             float imageAspect = (float) bitmapWidth / (float) bitmapHeight;
             float viewAspect = (float) viewWidth / (float) viewHeight;
-            GLES20.glUniform1f(uImageAspectHandle, imageAspect);
-            GLES20.glUniform1f(uViewAspectHandle, viewAspect);
-            GLES20.glUniform1f(uZoomHandle, zoom);
+            GLES20.glUniform1f(vertexShader.uImageAspectHandle, imageAspect);
+            GLES20.glUniform1f(vertexShader.uViewAspectHandle, viewAspect);
+            GLES20.glUniform1f(vertexShader.uZoomHandle, zoom);
             glErrorChecker.checkGlError("Image Position Uniforms");
 
             GLES20.glUniform2f(uViewSizeHandle, viewWidth, viewHeight);
@@ -139,8 +131,8 @@ public class MyRenderer implements TextureViewRenderer {
 
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
             glErrorChecker.checkGlError("drawArrays");
-            GLES20.glDisableVertexAttribArray(aPositionHandle);
-            GLES20.glDisableVertexAttribArray(aTexCoordHandle);
+            GLES20.glDisableVertexAttribArray(vertexShader.aPositionHandle);
+            GLES20.glDisableVertexAttribArray(vertexShader.aTexCoordHandle);
         }
     }
 
