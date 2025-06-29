@@ -5,7 +5,6 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
 import org.telegram.demo.utils.GlErrorChecker;
-import org.telegram.demo.utils.ShaderLoader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -57,7 +56,7 @@ class MyRenderer implements TextureViewRenderer {
     // region: external params
     private float zoom = MyGLTextureView.DEFAULT_ZOOM;
     private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
-    private float sigma = 0.2f; // TODO pass from DemoActivity
+    private int blurRadius = 100; // TODO pass from DemoActivity
     //endregion
 
     public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
@@ -105,14 +104,17 @@ class MyRenderer implements TextureViewRenderer {
         if (textureId != null) {
             // TODO create fbo once only, when image or view gets resized
             CreateFBOResult createFBOResult = createFBOTexture(viewWidth, viewHeight);
+            CreateFBOResult createFBOResult2 = createFBOTexture(viewWidth, viewHeight);
 
-            blurRenderPass(createFBOResult);
-            zoomAndCropRenderPass(createFBOResult);
+            blurRenderPass(createFBOResult.FBOId, textureId, BlurDirection.Horizontal);
+            blurRenderPass(createFBOResult2.FBOId, createFBOResult.textureId, BlurDirection.Vertical);
+
+            zoomAndCropRenderPass(createFBOResult2);
         }
     }
 
-    private void blurRenderPass(CreateFBOResult createFBOResult) {
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, createFBOResult.FBOId);
+    private void blurRenderPass(int outputFboId, int inputTextureId, BlurDirection blurDirection) {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, outputFboId);
         GLES20.glUseProgram(avatarBlurProgram.glProgram);
 
         AvatarBlurVertexShader vertexShader = avatarBlurProgram.vertexShader;
@@ -126,20 +128,45 @@ class MyRenderer implements TextureViewRenderer {
         glErrorChecker.checkGlError("aTextCoordHandle");
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTextureId);
         GLES20.glUniform1i(avatarBlurProgram.blurFragmentShader.uTextureHandle, 0);
 
-        GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, bitmapWidth, bitmapHeight);
-        GLES20.glUniform1f(avatarBlurProgram.blurFragmentShader.uSigmaHandle, sigma);
+        if (blurDirection == BlurDirection.Horizontal) {
+            GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, bitmapWidth, bitmapHeight);
+        } else {
+            GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, viewWidth, viewHeight);
+        }
+        GLES20.glUniform1f(avatarBlurProgram.blurFragmentShader.uSigmaHandle, getSigma(blurRadius));
+        GLES20.glUniform1i(avatarBlurProgram.blurFragmentShader.uRadiusHandle, blurRadius);
 
-        // horizontal blur direction
-        GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uDirHandle, 1.0f, 0.0f);
+        if (blurDirection == BlurDirection.Horizontal) {
+            GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uDirHandle, 1.0f, 0.0f);
+        } else if (blurDirection == BlurDirection.Vertical) {
+            GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uDirHandle, 0.0f, 1.0f);
+        }
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         glErrorChecker.checkGlError("drawArrays");
 
         GLES20.glDisableVertexAttribArray(vertexShader.aPositionHandle);
         GLES20.glDisableVertexAttribArray(vertexShader.aTexCoordHandle);
+    }
+
+    private float getSigma(float radius) {
+        return radius > 0 ? 0.3f * radius + 0.6f : 0.0f;
+    }
+
+    private int createTexture(Bitmap bitmap) {
+        int[] texIds = new int[1];
+        GLES20.glGenTextures(1, texIds, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texIds[0]);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+        glErrorChecker.checkGlError("createTexture");
+        return texIds[0];
     }
 
     private void zoomAndCropRenderPass(CreateFBOResult createFBOResult) {
@@ -204,15 +231,9 @@ class MyRenderer implements TextureViewRenderer {
         this.cornerRadius = cornerRadius;
     }
 
-    private int createTexture(Bitmap bitmap) {
-        int[] texIds = new int[1];
-        GLES20.glGenTextures(1, texIds, 0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texIds[0]);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
-        glErrorChecker.checkGlError("createTexture");
-        return texIds[0];
+    private enum BlurDirection {
+        Vertical,
+        Horizontal
     }
 
     private CreateFBOResult createFBOTexture(int width, int height) {

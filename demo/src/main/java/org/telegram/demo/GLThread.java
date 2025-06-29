@@ -86,7 +86,7 @@ public class GLThread extends HandlerThread {
         //glThreadHandler.postDelayed(this::handleDrawFrame, 5000);
         // TODO remove frame count limit
         if (frameCount++ < 100) {
-            glThreadHandler.post(this::handleDrawFrame);
+            glThreadHandler.postDelayed(this::handleDrawFrame, 100);
         }
     }
 

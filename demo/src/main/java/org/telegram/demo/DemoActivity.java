@@ -29,7 +29,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
 
         final int cornerRadius = AndroidUtilities.dp(100);
         final int imageSize = AndroidUtilities.dp(200);
-        final float zoom = 2f;
+        final float zoom = 1f;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
