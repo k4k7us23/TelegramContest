@@ -39,13 +39,7 @@ class MyRenderer implements TextureViewRenderer {
     private FloatBuffer texCoordBuffer;
     private FloatBuffer textCoord2Buffer;
 
-    //region: Vertex shader
-    //endregion
-
-    //region: Fragment shader
-
     private Integer textureId = null;
-    //endregion
 
     private ZoomAndCropProgram zoomAndCropProgram;
     private AvatarBlurProgram avatarBlurProgram;
@@ -58,6 +52,9 @@ class MyRenderer implements TextureViewRenderer {
     private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
     private int blurRadius = MyGLTextureView.DEFAULT_BLUR_RADIUS;
     //endregion
+
+    private CreateFBOResult createFBOResult;
+    private CreateFBOResult createFBOResult2;
 
     public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
         this.avatarProgramFactory = avatarProgramFactory;
@@ -95,6 +92,19 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glViewport(0, 0, width, height);
         viewHeight = height;
         viewWidth = width;
+
+        if (createFBOResult != null) {
+            deleteFBOTexture(createFBOResult);
+            createFBOResult = null;
+        }
+
+        if (createFBOResult2 != null) {
+            deleteFBOTexture(createFBOResult2);
+            createFBOResult2 = null;
+        }
+
+        createFBOResult = createFBOTexture(viewWidth, viewHeight);
+        createFBOResult2 = createFBOTexture(viewWidth, viewHeight);
     }
 
     @Override
@@ -102,14 +112,10 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         if (textureId != null) {
-            // TODO create fbo once only, when image or view gets resized
-            CreateFBOResult createFBOResult = createFBOTexture(viewWidth, viewHeight);
-            CreateFBOResult createFBOResult2 = createFBOTexture(viewWidth, viewHeight);
-
             blurRenderPass(createFBOResult.FBOId, textureId, BlurDirection.Horizontal);
             blurRenderPass(createFBOResult2.FBOId, createFBOResult.textureId, BlurDirection.Vertical);
 
-            zoomAndCropRenderPass(createFBOResult2);
+            zoomAndCropRenderPass(createFBOResult2.textureId);
         }
     }
 
@@ -169,7 +175,7 @@ class MyRenderer implements TextureViewRenderer {
         return texIds[0];
     }
 
-    private void zoomAndCropRenderPass(CreateFBOResult createFBOResult) {
+    private void zoomAndCropRenderPass(int inputTextureId) {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
         GLES20.glUseProgram(zoomAndCropProgram.glProgram);
 
@@ -194,10 +200,8 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glUniform2f(fragmentShader.uViewSizeHandle, viewWidth, viewHeight);
         GLES20.glUniform1f(fragmentShader.uCornerRadiusHandle, cornerRadius);
 
-        /*GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);*/
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, createFBOResult.textureId);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTextureId);
 
         GLES20.glUniform1i(fragmentShader.uTextureHandle, 0);
 
@@ -274,6 +278,11 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 
         return new CreateFBOResult(textureId[0], fboId[0]);
+    }
+
+    private void deleteFBOTexture(CreateFBOResult fboResult) {
+        GLES20.glDeleteTextures(1, new int[]{fboResult.textureId}, 0);
+        GLES20.glDeleteFramebuffers(1, new int[]{fboResult.FBOId}, 0);
     }
 
     private static class CreateFBOResult {

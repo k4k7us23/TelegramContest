@@ -65,7 +65,6 @@ public class GLThread extends HandlerThread {
         renderer.onSurfaceChanged(width, height);
     }
 
-
     private void handleUpdateBitmap(Bitmap bitmap) {
         renderer.onBitmapUpdate(bitmap);
     }
@@ -84,6 +83,8 @@ public class GLThread extends HandlerThread {
 
     private int frameCount = 0;
 
+    // TODO consider posting of handle draw frame only when needed. for example when gpu finished rendering of previous frame.
+    // TODO consider posting of handle draw frame in sync with choreographer
     private void handleDrawFrame() {
         eglHelper.makeCurrent();
 
@@ -91,11 +92,11 @@ public class GLThread extends HandlerThread {
         eglHelper.swapBuffers();
 
         // TODO change to constant redraw
-        //glThreadHandler.postDelayed(this::handleDrawFrame, 5000);
-        // TODO remove frame count limit
+        glThreadHandler.post(this::handleDrawFrame);
+        /*// TODO remove frame count limit
         if (frameCount++ < 100) {
             glThreadHandler.postDelayed(this::handleDrawFrame, 100);
-        }
+        }*/
     }
 
     private void handleRequestStop() {

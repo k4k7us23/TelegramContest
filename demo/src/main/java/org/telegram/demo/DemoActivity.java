@@ -27,10 +27,10 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final int cornerRadius = AndroidUtilities.dp(100);
+        final int cornerRadius = AndroidUtilities.dp(40);
         final int imageSize = AndroidUtilities.dp(200);
-        final float zoom = 1.1f;
-        final int blurRadius = 23;
+        final float zoom = 1.2f;
+        final int blurRadius = 200;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
