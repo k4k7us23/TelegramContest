@@ -42,6 +42,7 @@ class MyRenderer implements TextureViewRenderer {
     //endregion
 
     private ZoomAndCropProgram zoomAndCropProgram;
+    private AvatarBlurProgram avatarBlurProgram;
 
     private int viewWidth, viewHeight;
     private int bitmapWidth, bitmapHeight;
@@ -71,6 +72,7 @@ class MyRenderer implements TextureViewRenderer {
         avatarProgramFactory.onSurfaceCreated();
 
         zoomAndCropProgram = avatarProgramFactory.zoomAndCropProgram;
+        avatarBlurProgram = avatarProgramFactory.avatarBlurProgram;
 
         glErrorChecker.checkGlError("onSurfaceCreated");
     }
