@@ -15,4 +15,6 @@ public interface TextureViewRenderer {
     void onZoomUpdate(float zoom);
 
     void onCornerRadiusUpdate(float cornerRadius);
+
+    void onBlurRadiusUpdate(int blurRadius);
 }

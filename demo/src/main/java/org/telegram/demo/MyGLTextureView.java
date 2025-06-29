@@ -18,6 +18,7 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
 
     static final float DEFAULT_ZOOM = 1f;
     static final float DEFAULT_CORNER_RADIUS = 0f;
+    static final int DEFAULT_BLUR_RADIUS = 1;
 
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final GlErrorChecker glErrorChecker = new GlErrorChecker();
@@ -65,6 +66,12 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     public void updateCornerRadius(float cornerRadius) {
         executeWhenGlThreadIsReady(() -> {
             glThread.updateCornerRadius(cornerRadius);
+        });
+    }
+
+    public void updateBlurRadius(int blurRadius) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateBlurRadius(blurRadius);
         });
     }
 

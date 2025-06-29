@@ -29,7 +29,8 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
 
         final int cornerRadius = AndroidUtilities.dp(100);
         final int imageSize = AndroidUtilities.dp(200);
-        final float zoom = 1f;
+        final float zoom = 1.1f;
+        final int blurRadius = 23;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -56,6 +57,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         textureView = new MyGLTextureView(this);
         textureView.updateZoom(zoom);
         textureView.updateCornerRadius(cornerRadius);
+        textureView.updateBlurRadius(blurRadius);
         FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(imageSize, imageSize);
         textureViewLp.topMargin = AndroidUtilities.dp(350);
         textureViewLp.leftMargin = AndroidUtilities.dp(10);

@@ -56,7 +56,7 @@ class MyRenderer implements TextureViewRenderer {
     // region: external params
     private float zoom = MyGLTextureView.DEFAULT_ZOOM;
     private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
-    private int blurRadius = 100; // TODO pass from DemoActivity
+    private int blurRadius = MyGLTextureView.DEFAULT_BLUR_RADIUS;
     //endregion
 
     public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
@@ -229,6 +229,11 @@ class MyRenderer implements TextureViewRenderer {
     @Override
     public void onCornerRadiusUpdate(float cornerRadius) {
         this.cornerRadius = cornerRadius;
+    }
+
+    @Override
+    public void onBlurRadiusUpdate(int blurRadius) {
+        this.blurRadius = blurRadius;
     }
 
     private enum BlurDirection {

@@ -49,6 +49,10 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleUpdateCornerRadius(cornerRadius));
     }
 
+    public void updateBlurRadius(int blurRadius) {
+        glThreadHandler.post(() -> handleUpdateBlurRadius(blurRadius));
+    }
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
@@ -72,6 +76,10 @@ public class GLThread extends HandlerThread {
 
     private void handleUpdateCornerRadius(float cornerRadius) {
         renderer.onCornerRadiusUpdate(cornerRadius);
+    }
+
+    private void handleUpdateBlurRadius(int blurRadius) {
+        renderer.onBlurRadiusUpdate(blurRadius);
     }
 
     private int frameCount = 0;
