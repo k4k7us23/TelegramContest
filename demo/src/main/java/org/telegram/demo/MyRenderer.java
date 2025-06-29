@@ -30,8 +30,15 @@ class MyRenderer implements TextureViewRenderer {
             0.0f, 0.0f,
             1.0f, 0.0f
     };
+    private final float[] textCoordsData2 = {
+            0.0f, 0.0f, // bottom-left
+            1.0f, 0.0f, // bottom-right
+            0.0f, 1.0f, // top-left
+            1.0f, 1.0f  // top-right
+    };
     private FloatBuffer vertexBuffer;
     private FloatBuffer texCoordBuffer;
+    private FloatBuffer textCoord2Buffer;
 
     //region: Vertex shader
     //endregion
@@ -47,8 +54,11 @@ class MyRenderer implements TextureViewRenderer {
     private int viewWidth, viewHeight;
     private int bitmapWidth, bitmapHeight;
 
+    // region: external params
     private float zoom = MyGLTextureView.DEFAULT_ZOOM;
     private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
+    private float sigma = 0.2f; // TODO pass from DemoActivity
+    //endregion
 
     public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
         this.avatarProgramFactory = avatarProgramFactory;
@@ -68,6 +78,10 @@ class MyRenderer implements TextureViewRenderer {
         texCoordBuffer = ByteBuffer.allocateDirect(texCoordsData.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         texCoordBuffer.put(texCoordsData).position(0);
+
+        textCoord2Buffer = ByteBuffer.allocateDirect(textCoordsData2.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        textCoord2Buffer.put(textCoordsData2).position(0);
 
         avatarProgramFactory.onSurfaceCreated();
 
@@ -89,38 +103,81 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         if (textureId != null) {
-            GLES20.glUseProgram(zoomAndCropProgram.glProgram);
+            // TODO create fbo once only, when image or view gets resized
+            CreateFBOResult createFBOResult = createFBOTexture(viewWidth, viewHeight);
 
-            AvatarVertexShader vertexShader = zoomAndCropProgram.vertexShader;
-            AvatarFragmentShader fragmentShader = zoomAndCropProgram.fragmentShader;
-
-            GLES20.glEnableVertexAttribArray(vertexShader.aPositionHandle);
-            GLES20.glVertexAttribPointer(vertexShader.aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-            glErrorChecker.checkGlError("aPositionHandle");
-
-            GLES20.glEnableVertexAttribArray(vertexShader.aTexCoordHandle);
-            GLES20.glVertexAttribPointer(vertexShader.aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
-            glErrorChecker.checkGlError("aTextCoordHandle");
-
-            float imageAspect = (float) bitmapWidth / (float) bitmapHeight;
-            float viewAspect = (float) viewWidth / (float) viewHeight;
-            GLES20.glUniform1f(vertexShader.uImageAspectHandle, imageAspect);
-            GLES20.glUniform1f(vertexShader.uViewAspectHandle, viewAspect);
-            GLES20.glUniform1f(vertexShader.uZoomHandle, zoom);
-            glErrorChecker.checkGlError("Image Position Uniforms");
-
-            GLES20.glUniform2f(fragmentShader.uViewSizeHandle, viewWidth, viewHeight);
-            GLES20.glUniform1f(fragmentShader.uCornerRadiusHandle, cornerRadius);
-
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
-            GLES20.glUniform1i(fragmentShader.uTextureHandle, 0);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-            glErrorChecker.checkGlError("drawArrays");
-            GLES20.glDisableVertexAttribArray(vertexShader.aPositionHandle);
-            GLES20.glDisableVertexAttribArray(vertexShader.aTexCoordHandle);
+            blurRenderPass(createFBOResult);
+            zoomAndCropRenderPass(createFBOResult);
         }
+    }
+
+    private void blurRenderPass(CreateFBOResult createFBOResult) {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, createFBOResult.FBOId);
+        GLES20.glUseProgram(avatarBlurProgram.glProgram);
+
+        AvatarBlurVertexShader vertexShader = avatarBlurProgram.vertexShader;
+
+        GLES20.glEnableVertexAttribArray(vertexShader.aPositionHandle);
+        GLES20.glVertexAttribPointer(vertexShader.aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        glErrorChecker.checkGlError("aPositionHandle");
+
+        GLES20.glEnableVertexAttribArray(vertexShader.aTexCoordHandle);
+        GLES20.glVertexAttribPointer(vertexShader.aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 0, textCoord2Buffer);
+        glErrorChecker.checkGlError("aTextCoordHandle");
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
+        GLES20.glUniform1i(avatarBlurProgram.blurFragmentShader.uTextureHandle, 0);
+
+        GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, bitmapWidth, bitmapHeight);
+        GLES20.glUniform1f(avatarBlurProgram.blurFragmentShader.uSigmaHandle, sigma);
+
+        // horizontal blur direction
+        GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uDirHandle, 1.0f, 0.0f);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        glErrorChecker.checkGlError("drawArrays");
+
+        GLES20.glDisableVertexAttribArray(vertexShader.aPositionHandle);
+        GLES20.glDisableVertexAttribArray(vertexShader.aTexCoordHandle);
+    }
+
+    private void zoomAndCropRenderPass(CreateFBOResult createFBOResult) {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+        GLES20.glUseProgram(zoomAndCropProgram.glProgram);
+
+        AvatarVertexShader vertexShader = zoomAndCropProgram.vertexShader;
+        AvatarFragmentShader fragmentShader = zoomAndCropProgram.fragmentShader;
+
+        GLES20.glEnableVertexAttribArray(vertexShader.aPositionHandle);
+        GLES20.glVertexAttribPointer(vertexShader.aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        glErrorChecker.checkGlError("aPositionHandle");
+
+        GLES20.glEnableVertexAttribArray(vertexShader.aTexCoordHandle);
+        GLES20.glVertexAttribPointer(vertexShader.aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
+        glErrorChecker.checkGlError("aTextCoordHandle");
+
+        float imageAspect = (float) bitmapWidth / (float) bitmapHeight;
+        float viewAspect = (float) viewWidth / (float) viewHeight;
+        GLES20.glUniform1f(vertexShader.uImageAspectHandle, imageAspect);
+        GLES20.glUniform1f(vertexShader.uViewAspectHandle, viewAspect);
+        GLES20.glUniform1f(vertexShader.uZoomHandle, zoom);
+        glErrorChecker.checkGlError("Image Position Uniforms");
+
+        GLES20.glUniform2f(fragmentShader.uViewSizeHandle, viewWidth, viewHeight);
+        GLES20.glUniform1f(fragmentShader.uCornerRadiusHandle, cornerRadius);
+
+        /*GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);*/
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, createFBOResult.textureId);
+
+        GLES20.glUniform1i(fragmentShader.uTextureHandle, 0);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        glErrorChecker.checkGlError("drawArrays");
+        GLES20.glDisableVertexAttribArray(vertexShader.aPositionHandle);
+        GLES20.glDisableVertexAttribArray(vertexShader.aTexCoordHandle);
     }
 
     @Override
@@ -156,5 +213,50 @@ class MyRenderer implements TextureViewRenderer {
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
         glErrorChecker.checkGlError("createTexture");
         return texIds[0];
+    }
+
+    private CreateFBOResult createFBOTexture(int width, int height) {
+        int[] textureId = new int[1];
+        int[] fboId = new int[1];
+
+        // 1. Create texture
+        GLES20.glGenTextures(1, textureId, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId[0]);
+
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA,
+                width, height, 0, GLES20.GL_RGBA,
+                GLES20.GL_UNSIGNED_BYTE, null);
+
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
+        // 2. Create framebuffer
+        GLES20.glGenFramebuffers(1, fboId, 0);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboId[0]);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, textureId[0], 0);
+
+        // 3. Check status
+        int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+        if (status != GLES20.GL_FRAMEBUFFER_COMPLETE) {
+            throw new RuntimeException("Framebuffer is not complete: status = " + status);
+        }
+
+        // 4. Unbind framebuffer
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+
+        return new CreateFBOResult(textureId[0], fboId[0]);
+    }
+
+    private static class CreateFBOResult {
+        public int textureId;
+        public int FBOId;
+
+        public CreateFBOResult(int textureId, int FBOId) {
+            this.textureId = textureId;
+            this.FBOId = FBOId;
+        }
     }
 }

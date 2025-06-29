@@ -19,17 +19,20 @@ class AvatarProgramFactory {
     public void onSurfaceCreated() {
         final int avatarVertexShaderPtr;
         final int avatarFragmentShaderPtr;
-        final int avatarBlurShaderPtr;
+        final int avatarBlurFragmentShaderPtr;
+        final int avatarBlurVertexShaderPtr;
 
         try {
             avatarVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
             avatarFragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
-            avatarBlurShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_blur_frag);
+
+            avatarBlurVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_blur_vert);
+            avatarBlurFragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_blur_frag);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         zoomAndCropProgram = new ZoomAndCropProgram(avatarVertexShaderPtr, avatarFragmentShaderPtr);
-        avatarBlurProgram = new AvatarBlurProgram(avatarVertexShaderPtr, avatarBlurShaderPtr);
+        avatarBlurProgram = new AvatarBlurProgram(avatarBlurVertexShaderPtr, avatarBlurFragmentShaderPtr);
     }
 }

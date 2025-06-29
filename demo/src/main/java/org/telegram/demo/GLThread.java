@@ -74,6 +74,8 @@ public class GLThread extends HandlerThread {
         renderer.onCornerRadiusUpdate(cornerRadius);
     }
 
+    private int frameCount = 0;
+
     private void handleDrawFrame() {
         eglHelper.makeCurrent();
 
@@ -81,8 +83,11 @@ public class GLThread extends HandlerThread {
         eglHelper.swapBuffers();
 
         // TODO change to constant redraw
-        //glThreadHandler.postDelayed(this::handleDrawFrame, 200);
-        glThreadHandler.post(this::handleDrawFrame);
+        //glThreadHandler.postDelayed(this::handleDrawFrame, 5000);
+        // TODO remove frame count limit
+        if (frameCount++ < 100) {
+            glThreadHandler.post(this::handleDrawFrame);
+        }
     }
 
     private void handleRequestStop() {
