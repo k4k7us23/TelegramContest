@@ -33,17 +33,15 @@ public class MyRenderer implements TextureViewRenderer {
     private FloatBuffer vertexBuffer;
     private FloatBuffer texCoordBuffer;
 
-    private int program;
-
     //region: Vertex shader
-    private AvatarVertexShader vertexShader;
     //endregion
 
     //region: Fragment shader
-    private AvatarFragmentShader fragmentShader;
 
     private Integer textureId = null;
     //endregion
+
+    private ZoomAndCropProgram zoomAndCropProgram;
 
     private int viewWidth, viewHeight;
     private int bitmapWidth, bitmapHeight;
@@ -77,14 +75,7 @@ public class MyRenderer implements TextureViewRenderer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        program = GLES20.glCreateProgram();
-        GLES20.glAttachShader(program, vertexShaderPtr);
-        GLES20.glAttachShader(program, fragmentShaderPtr);
-        GLES20.glLinkProgram(program);
-        GLES20.glUseProgram(program);
-
-        vertexShader = new AvatarVertexShader(program);
-        fragmentShader = new AvatarFragmentShader(program);
+        zoomAndCropProgram = new ZoomAndCropProgram(vertexShaderPtr, fragmentShaderPtr);
 
         glErrorChecker.checkGlError("onSurfaceCreated");
     }
@@ -101,7 +92,10 @@ public class MyRenderer implements TextureViewRenderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         if (textureId != null) {
-            GLES20.glUseProgram(program);
+            GLES20.glUseProgram(zoomAndCropProgram.glProgram);
+
+            AvatarVertexShader vertexShader = zoomAndCropProgram.vertexShader;
+            AvatarFragmentShader fragmentShader = zoomAndCropProgram.fragmentShader;
 
             GLES20.glEnableVertexAttribArray(vertexShader.aPositionHandle);
             GLES20.glVertexAttribPointer(vertexShader.aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
