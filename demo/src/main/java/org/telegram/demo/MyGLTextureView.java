@@ -9,6 +9,7 @@ import android.view.TextureView;
 
 import org.telegram.demo.utils.GlErrorChecker;
 import org.telegram.demo.utils.ShaderLoader;
+import org.telegram.messenger.AndroidUtilities;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -25,6 +26,8 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     private MyRenderer myRenderer;
     private GLThread glThread;
     private Queue<Runnable> glThreadActionsQueue = new ArrayDeque<>();
+
+    private final int scaleBitmapHeight = AndroidUtilities.dp(120);
 
     public MyGLTextureView(Context context) {
         super(context);
@@ -51,10 +54,40 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
         }
     }
 
+    private Integer viewSizeMn = null;
+
+    private Bitmap sentBitmap = null;
+    private Bitmap originalBitmap = null;
+    private Bitmap scaledBitmap = null;
+
     public void updateBitmap(Bitmap bitmap) {
-        executeWhenGlThreadIsReady(() -> {
-            glThread.updateBitmap(bitmap);
-        });
+        this.originalBitmap = bitmap;
+        this.scaledBitmap = null;
+        float ratio = (float) bitmap.getWidth() / (float) bitmap.getHeight();
+        if (scaleBitmapHeight < bitmap.getHeight()) {
+            scaledBitmap = Bitmap.createScaledBitmap(bitmap, (int) (ratio * scaleBitmapHeight), scaleBitmapHeight, true);
+        }
+
+        updateBitmapInternal(getBitmapForRendering());
+    }
+
+    private Bitmap getBitmapForRendering() {
+        if (viewSizeMn == null) {
+            return originalBitmap;
+        } else if (scaledBitmap != null && viewSizeMn <= scaleBitmapHeight) {
+            return scaledBitmap;
+        } else {
+            return originalBitmap;
+        }
+    }
+
+    private void updateBitmapInternal(Bitmap bitmap) {
+        if (sentBitmap != bitmap) {
+            sentBitmap = bitmap;
+            executeWhenGlThreadIsReady(() -> {
+                glThread.updateBitmap(bitmap);
+            });
+        }
     }
 
     public void updateZoom(float zoom) {
@@ -77,15 +110,21 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        viewSizeMn = Math.min(width, height);
         glThread = new GLThread(new Surface(surfaceTexture), myRenderer, width, height);
         while (!glThreadActionsQueue.isEmpty()) {
             glThreadActionsQueue.poll().run();
         }
+        updateBitmapInternal(getBitmapForRendering());
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        if (glThread != null) glThread.onSurfaceChanged(width, height);
+        viewSizeMn = Math.min(width, height);
+        if (glThread != null) {
+            glThread.onSurfaceChanged(width, height);
+        }
+        updateBitmapInternal(getBitmapForRendering());
     }
 
     @Override

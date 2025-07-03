@@ -1,10 +1,15 @@
 package org.telegram.demo;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Outline;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -22,15 +27,15 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     private MyGLTextureView textureView;
 
     private int currentAccount = UserConfig.selectedAccount;
+    final int cornerRadius = AndroidUtilities.dp(20);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final int cornerRadius = AndroidUtilities.dp(40);
         final int imageSize = AndroidUtilities.dp(200);
         final float zoom = 1.2f;
-        final int blurRadius = 200;
+        final int blurRadius = 1;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -68,14 +73,47 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         //loadUserAvatarIntoImageView();
         loadStaticImageIntoImageView();
 
-        /*ValueAnimator animator = ValueAnimator.ofFloat(1f, 2f).setDuration(1_000);
+        ValueAnimator blurAnimator = ValueAnimator.ofInt(1, 100).setDuration(1_000);
+        blurAnimator.addUpdateListener(animation -> {
+            textureView.updateBlurRadius((Integer) animation.getAnimatedValue());
+        });
+
+        ValueAnimator sizeAnimator = ValueAnimator.ofInt(AndroidUtilities.dp(200), AndroidUtilities.dp(120)).setDuration(1_000);
+        sizeAnimator.addUpdateListener(animation -> {
+            ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
+            layoutParams.height = layoutParams.width = (int) animation.getAnimatedValue();
+            textureView.setLayoutParams(layoutParams);
+        });
+        sizeAnimator.setDuration(5_000);
+
+        AnimatorSet set = new AnimatorSet();
+        set.setStartDelay(1_000);
+        set.playSequentially(sizeAnimator, blurAnimator);
+
+        set.start();
+        /*set.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+
+                ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
+                layoutParams.height = layoutParams.width = AndroidUtilities.dp(200);
+                textureView.setLayoutParams(layoutParams);
+                textureView.updateBlurRadius(20);
+                startSizeAnimation();
+            }
+        });*/
+    }
+
+    private void startSizeAnimation() {
+        ValueAnimator animator = ValueAnimator.ofFloat(1f, 2f).setDuration(1_000);
         animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.addUpdateListener(animation -> {
             textureView.updateZoom((Float) animation.getAnimatedValue());
             textureView.updateCornerRadius(Math.round(cornerRadius + AndroidUtilities.dp(40) * animator.getAnimatedFraction()));
         });
-        animator.start();*/
+        animator.start();
     }
 
     private void loadStaticImageIntoImageView() {
