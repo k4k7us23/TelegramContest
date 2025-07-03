@@ -55,6 +55,7 @@ class MyRenderer implements TextureViewRenderer {
 
     private CreateFBOResult horizontalBlurFBOResult;
     private CreateFBOResult verticalBlurFBOResult;
+    private boolean blurCalculated = false;
 
     public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
         this.avatarProgramFactory = avatarProgramFactory;
@@ -89,22 +90,8 @@ class MyRenderer implements TextureViewRenderer {
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        GLES20.glViewport(0, 0, width, height);
         viewHeight = height;
         viewWidth = width;
-
-        if (horizontalBlurFBOResult != null) {
-            deleteFBOTexture(horizontalBlurFBOResult);
-            horizontalBlurFBOResult = null;
-        }
-
-        if (verticalBlurFBOResult != null) {
-            deleteFBOTexture(verticalBlurFBOResult);
-            verticalBlurFBOResult = null;
-        }
-
-        horizontalBlurFBOResult = createFBOTexture(viewWidth, viewHeight);
-        verticalBlurFBOResult = createFBOTexture(viewWidth, viewHeight);
     }
 
     @Override
@@ -112,14 +99,18 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         if (textureId != null) {
-            blurRenderPass(horizontalBlurFBOResult.FBOId, textureId, BlurDirection.Horizontal);
-            blurRenderPass(verticalBlurFBOResult.FBOId, horizontalBlurFBOResult.textureId, BlurDirection.Vertical);
+            if (!blurCalculated) {
+                blurRenderPass(horizontalBlurFBOResult.FBOId, textureId, BlurDirection.Horizontal);
+                blurRenderPass(verticalBlurFBOResult.FBOId, horizontalBlurFBOResult.textureId, BlurDirection.Vertical);
+                blurCalculated = true;
+            }
 
             zoomAndCropRenderPass(verticalBlurFBOResult.textureId);
         }
     }
 
     private void blurRenderPass(int outputFboId, int inputTextureId, BlurDirection blurDirection) {
+        GLES20.glViewport(0, 0, bitmapWidth, bitmapHeight);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, outputFboId);
         GLES20.glUseProgram(avatarBlurProgram.glProgram);
 
@@ -137,11 +128,7 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTextureId);
         GLES20.glUniform1i(avatarBlurProgram.blurFragmentShader.uTextureHandle, 0);
 
-        if (blurDirection == BlurDirection.Horizontal) {
-            GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, bitmapWidth, bitmapHeight);
-        } else {
-            GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, viewWidth, viewHeight);
-        }
+        GLES20.glUniform2f(avatarBlurProgram.blurFragmentShader.uTexSizeHandle, bitmapWidth, bitmapHeight);
         GLES20.glUniform1f(avatarBlurProgram.blurFragmentShader.uSigmaHandle, getSigma(blurRadius));
         GLES20.glUniform1i(avatarBlurProgram.blurFragmentShader.uRadiusHandle, blurRadius);
 
@@ -176,6 +163,7 @@ class MyRenderer implements TextureViewRenderer {
     }
 
     private void zoomAndCropRenderPass(int inputTextureId) {
+        GLES20.glViewport(0, 0, viewWidth, viewHeight);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
         GLES20.glUseProgram(zoomAndCropProgram.glProgram);
 
@@ -213,15 +201,30 @@ class MyRenderer implements TextureViewRenderer {
 
     @Override
     public void onBitmapUpdate(Bitmap bitmap) {
+        if (textureId != null) {
+            GLES20.glDeleteTextures(1, new int[]{textureId}, 0);
+            textureId = null;
+        }
+
+        if (horizontalBlurFBOResult != null) {
+            deleteFBOTexture(horizontalBlurFBOResult);
+            horizontalBlurFBOResult = null;
+        }
+
+        if (verticalBlurFBOResult != null) {
+            deleteFBOTexture(verticalBlurFBOResult);
+            verticalBlurFBOResult = null;
+        }
+        blurCalculated = false;
+
         if (bitmap != null) {
-            if (textureId != null) {
-                GLES20.glDeleteTextures(1, new int[]{textureId}, 0);
-                textureId = null;
-            }
             textureId = createTexture(bitmap);
 
             bitmapWidth = bitmap.getWidth();
             bitmapHeight = bitmap.getHeight();
+
+            horizontalBlurFBOResult = createFBOTexture(bitmapWidth, bitmapHeight);
+            verticalBlurFBOResult = createFBOTexture(bitmapWidth, bitmapHeight);
         }
     }
 
@@ -238,6 +241,7 @@ class MyRenderer implements TextureViewRenderer {
     @Override
     public void onBlurRadiusUpdate(int blurRadius) {
         this.blurRadius = blurRadius;
+        blurCalculated = false;
     }
 
     private enum BlurDirection {

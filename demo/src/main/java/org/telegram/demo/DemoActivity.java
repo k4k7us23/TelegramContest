@@ -67,6 +67,15 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
 
         //loadUserAvatarIntoImageView();
         loadStaticImageIntoImageView();
+
+        /*ValueAnimator animator = ValueAnimator.ofFloat(1f, 2f).setDuration(1_000);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        animator.addUpdateListener(animation -> {
+            textureView.updateZoom((Float) animation.getAnimatedValue());
+            textureView.updateCornerRadius(Math.round(cornerRadius + AndroidUtilities.dp(40) * animator.getAnimatedFraction()));
+        });
+        animator.start();*/
     }
 
     private void loadStaticImageIntoImageView() {
