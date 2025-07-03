@@ -17,9 +17,15 @@ import java.util.Queue;
 
 public class MyGLTextureView extends TextureView implements TextureView.SurfaceTextureListener {
 
+    // Make sure this value is synced with avatar_frag.glsl
+    public static final float NO_VERTICAL_BLUR_LIMIT = -1f;
+
     static final float DEFAULT_ZOOM = 1f;
     static final float DEFAULT_CORNER_RADIUS = 0f;
     static final int DEFAULT_BLUR_RADIUS = 1;
+    static final float DEFAULT_VERTICAL_BLUR_LIMIT = NO_VERTICAL_BLUR_LIMIT;
+    static final float DEFAULT_BLUR_ALPHA = 1f;
+    static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
 
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final GlErrorChecker glErrorChecker = new GlErrorChecker();
@@ -105,6 +111,24 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     public void updateBlurRadius(int blurRadius) {
         executeWhenGlThreadIsReady(() -> {
             glThread.updateBlurRadius(blurRadius);
+        });
+    }
+
+    public void updateVerticalBlurLimit(float verticalBlurLimit) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateVerticalBlurLimit(verticalBlurLimit);
+        });
+    }
+
+    public void updateBlurAlpha(float blurAlpha) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateBlurAlpha(blurAlpha);
+        });
+    }
+
+    public void updateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
         });
     }
 

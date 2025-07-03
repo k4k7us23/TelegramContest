@@ -53,6 +53,18 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleUpdateBlurRadius(blurRadius));
     }
 
+    public void updateVerticalBlurLimit(float verticalBlurLimit) {
+        glThreadHandler.post(() -> handleUpdateVerticalBlurLimit(verticalBlurLimit));
+    }
+
+    public void updateBlurAlpha(float blurAlpha) {
+        glThreadHandler.post(() -> handleUpdateBlurAlpha(blurAlpha));
+    }
+
+    public void updateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
+        glThreadHandler.post(() -> handleUpdateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize));
+    }
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
@@ -79,6 +91,18 @@ public class GLThread extends HandlerThread {
 
     private void handleUpdateBlurRadius(int blurRadius) {
         renderer.onBlurRadiusUpdate(blurRadius);
+    }
+
+    private void handleUpdateVerticalBlurLimit(float verticalBlurLimit) {
+        renderer.onVerticalBlurLimitUpdate(verticalBlurLimit);
+    }
+
+    private void handleUpdateBlurAlpha(float blurAlpha) {
+        renderer.onBlurAlphaUpdate(blurAlpha);
+    }
+
+    private void handleUpdateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
+        renderer.onVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
     }
 
     private int frameCount = 0;

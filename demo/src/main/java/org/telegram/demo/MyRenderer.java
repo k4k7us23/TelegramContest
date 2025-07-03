@@ -39,7 +39,7 @@ class MyRenderer implements TextureViewRenderer {
     private FloatBuffer texCoordBuffer;
     private FloatBuffer textCoord2Buffer;
 
-    private Integer textureId = null;
+    private Integer originalBitmapTextureId = null;
 
     private ZoomAndCropProgram zoomAndCropProgram;
     private AvatarBlurProgram avatarBlurProgram;
@@ -51,6 +51,9 @@ class MyRenderer implements TextureViewRenderer {
     private float zoom = MyGLTextureView.DEFAULT_ZOOM;
     private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
     private int blurRadius = MyGLTextureView.DEFAULT_BLUR_RADIUS;
+    private float verticalBlurLimit = MyGLTextureView.DEFAULT_VERTICAL_BLUR_LIMIT;
+    private float blurAlpha = MyGLTextureView.DEFAULT_BLUR_ALPHA;
+    private float verticalBlurLimitBorderSize = MyGLTextureView.DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE;
     //endregion
 
     private CreateFBOResult horizontalBlurFBOResult;
@@ -98,14 +101,14 @@ class MyRenderer implements TextureViewRenderer {
     public void onDrawFrame() {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        if (textureId != null) {
+        if (originalBitmapTextureId != null) {
             if (!blurCalculated) {
-                blurRenderPass(horizontalBlurFBOResult.FBOId, textureId, BlurDirection.Horizontal);
+                blurRenderPass(horizontalBlurFBOResult.FBOId, originalBitmapTextureId, BlurDirection.Horizontal);
                 blurRenderPass(verticalBlurFBOResult.FBOId, horizontalBlurFBOResult.textureId, BlurDirection.Vertical);
                 blurCalculated = true;
             }
 
-            zoomAndCropRenderPass(verticalBlurFBOResult.textureId);
+            zoomAndCropRenderPass(verticalBlurFBOResult.textureId, originalBitmapTextureId);
         }
     }
 
@@ -162,7 +165,7 @@ class MyRenderer implements TextureViewRenderer {
         return texIds[0];
     }
 
-    private void zoomAndCropRenderPass(int inputTextureId) {
+    private void zoomAndCropRenderPass(final int bluredTextureId, final int originalImageTextureId) {
         GLES20.glViewport(0, 0, viewWidth, viewHeight);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
         GLES20.glUseProgram(zoomAndCropProgram.glProgram);
@@ -187,11 +190,17 @@ class MyRenderer implements TextureViewRenderer {
 
         GLES20.glUniform2f(fragmentShader.uViewSizeHandle, viewWidth, viewHeight);
         GLES20.glUniform1f(fragmentShader.uCornerRadiusHandle, cornerRadius);
+        GLES20.glUniform1f(fragmentShader.uVerticalBlurLimit, 1f - verticalBlurLimit);
+        GLES20.glUniform1f(fragmentShader.uBlurAlpha, blurAlpha);
+        GLES20.glUniform1f(fragmentShader.uVerticalBlurLimitBorderSize, -verticalBlurLimitBorderSize);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTextureId);
-
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bluredTextureId);
         GLES20.glUniform1i(fragmentShader.uTextureHandle, 0);
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, originalImageTextureId);
+        GLES20.glUniform1i(fragmentShader.uOriginalImageTextureHandle, 1);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         glErrorChecker.checkGlError("drawArrays");
@@ -201,9 +210,9 @@ class MyRenderer implements TextureViewRenderer {
 
     @Override
     public void onBitmapUpdate(Bitmap bitmap) {
-        if (textureId != null) {
-            GLES20.glDeleteTextures(1, new int[]{textureId}, 0);
-            textureId = null;
+        if (originalBitmapTextureId != null) {
+            GLES20.glDeleteTextures(1, new int[]{originalBitmapTextureId}, 0);
+            originalBitmapTextureId = null;
         }
 
         if (horizontalBlurFBOResult != null) {
@@ -218,7 +227,7 @@ class MyRenderer implements TextureViewRenderer {
         blurCalculated = false;
 
         if (bitmap != null) {
-            textureId = createTexture(bitmap);
+            originalBitmapTextureId = createTexture(bitmap);
 
             bitmapWidth = bitmap.getWidth();
             bitmapHeight = bitmap.getHeight();
@@ -242,6 +251,21 @@ class MyRenderer implements TextureViewRenderer {
     public void onBlurRadiusUpdate(int blurRadius) {
         this.blurRadius = blurRadius;
         blurCalculated = false;
+    }
+
+    @Override
+    public void onVerticalBlurLimitUpdate(float verticalBlurLimit) {
+        this.verticalBlurLimit = verticalBlurLimit;
+    }
+
+    @Override
+    public void onBlurAlphaUpdate(float blurAlpha) {
+        this.blurAlpha = blurAlpha;
+    }
+
+    @Override
+    public void onVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
+        this.verticalBlurLimitBorderSize = verticalBlurLimitBorderSize;
     }
 
     private enum BlurDirection {

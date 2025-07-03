@@ -17,4 +17,10 @@ public interface TextureViewRenderer {
     void onCornerRadiusUpdate(float cornerRadius);
 
     void onBlurRadiusUpdate(int blurRadius);
+
+    void onVerticalBlurLimitUpdate(float verticalBlurLimit);
+
+    void onBlurAlphaUpdate(float blurAlpha);
+
+    void onVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize);
 }

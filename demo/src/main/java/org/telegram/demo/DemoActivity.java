@@ -1,15 +1,11 @@
 package org.telegram.demo;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Outline;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -27,15 +23,15 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
     private MyGLTextureView textureView;
 
     private int currentAccount = UserConfig.selectedAccount;
-    final int cornerRadius = AndroidUtilities.dp(20);
+    final int cornerRadius = AndroidUtilities.dp(40);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         final int imageSize = AndroidUtilities.dp(200);
-        final float zoom = 1.2f;
-        final int blurRadius = 1;
+        final float zoom = 1f;
+        final int blurRadius = 300;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -46,7 +42,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         imageViewLayoutParams.leftMargin = AndroidUtilities.dp(10);
         imageViewLayoutParams.topMargin = AndroidUtilities.dp(10);
         imageView.setLayoutParams(imageViewLayoutParams);
-        containerLayout.addView(imageView);
+        //containerLayout.addView(imageView);
 
 
         imageView.setClipToOutline(true);
@@ -63,9 +59,12 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         textureView.updateZoom(zoom);
         textureView.updateCornerRadius(cornerRadius);
         textureView.updateBlurRadius(blurRadius);
-        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(imageSize, imageSize);
-        textureViewLp.topMargin = AndroidUtilities.dp(350);
-        textureViewLp.leftMargin = AndroidUtilities.dp(10);
+        textureView.updateBlurAlpha(1f);
+        textureView.updateVerticalBlurLimit(0.3f);
+        textureView.updateVerticalBlurLimitBorderSize(0.05f);
+        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(367));
+        /*textureViewLp.topMargin = AndroidUtilities.dp(350);
+        textureViewLp.leftMargin = AndroidUtilities.dp(10);*/
         containerLayout.addView(textureView, textureViewLp);
 
         setContentView(containerLayout);
@@ -73,7 +72,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         //loadUserAvatarIntoImageView();
         loadStaticImageIntoImageView();
 
-        ValueAnimator blurAnimator = ValueAnimator.ofInt(1, 100).setDuration(1_000);
+        /*ValueAnimator blurAnimator = ValueAnimator.ofInt(1, 100).setDuration(1_000);
         blurAnimator.addUpdateListener(animation -> {
             textureView.updateBlurRadius((Integer) animation.getAnimatedValue());
         });
@@ -90,7 +89,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         set.setStartDelay(1_000);
         set.playSequentially(sizeAnimator, blurAnimator);
 
-        set.start();
+        set.start();*/
         /*set.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {

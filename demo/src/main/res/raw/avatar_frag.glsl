@@ -1,9 +1,14 @@
 precision highp float;
 
 uniform sampler2D uTexture;
+uniform sampler2D uOriginalImageTexture;
 
 uniform vec2 uViewSize;
 uniform float uCornerRadius;
+
+uniform float uVerticalBlurLimit;
+uniform float uBlurAlpha;
+uniform float uVerticalBlurLimitBorderSize;
 
 varying vec2 vTexCoord;
 varying vec2 vVertexScale;
@@ -15,6 +20,9 @@ vec2 calculateNormalizedCoord(vec2 texCoord, vec2 vertexScale) {
 }
 
 float calculateAlpha(vec2 pixelCoord, vec2 viewSize, float cornerRadius) {
+    if (cornerRadius < 1.0) {
+        return 1.0;
+    }
     float left = pixelCoord.x;
     float right = viewSize.x - pixelCoord.x;
     float top = pixelCoord.y;
@@ -31,13 +39,31 @@ float calculateAlpha(vec2 pixelCoord, vec2 viewSize, float cornerRadius) {
     return 1.0 - smoothstep(cornerRadius - antialiasingWidth, cornerRadius, dist);
 }
 
+vec4 accountForVerticalBlurLimit(
+    vec4 originalColor,
+    vec4 blurredColor,
+    vec2 normalizedCoord
+) {
+    float blurAlpha;
+    if (uVerticalBlurLimit < 0.0 || uVerticalBlurLimit > 1.0) {
+        blurAlpha = 0.0;
+    } else {
+        blurAlpha = 1.0 - smoothstep(uVerticalBlurLimit, uVerticalBlurLimit + uVerticalBlurLimitBorderSize, normalizedCoord.y);
+        blurAlpha *= uBlurAlpha;
+    }
+    return mix(originalColor, blurredColor, blurAlpha);
+}
+
 void main() {
     vec4 color = texture2D(uTexture, vTexCoord);
+    vec4 originalColor = texture2D(uOriginalImageTexture, vTexCoord);
 
     vec2 normalizedCoord = calculateNormalizedCoord(vTexCoord, vVertexScale);
     vec2 pixelCoord = (normalizedCoord * uViewSize);
 
-    float alpha = calculateAlpha(pixelCoord, uViewSize, uCornerRadius);
+    vec4 mixedColor = accountForVerticalBlurLimit(originalColor, color, normalizedCoord);
 
-    gl_FragColor = vec4(color.rgb, alpha);
+    float shapeAlpha = calculateAlpha(pixelCoord, uViewSize, uCornerRadius);
+
+    gl_FragColor = vec4(mixedColor.rgb, shapeAlpha);
 }
