@@ -13,6 +13,7 @@ public class AvatarFragmentShader {
     public int uVerticalBlurLimit;
     public int uBlurAlpha;
     public int uVerticalBlurLimitBorderSize;
+    public int uBlackOverlayAlpha;
 
     public AvatarFragmentShader(int glProgram) {
         this.glProgram = glProgram;
@@ -24,6 +25,7 @@ public class AvatarFragmentShader {
         uVerticalBlurLimit = GLES20.glGetUniformLocation(glProgram, "uVerticalBlurLimit");
         uBlurAlpha = GLES20.glGetUniformLocation(glProgram, "uBlurAlpha");
         uVerticalBlurLimitBorderSize = GLES20.glGetUniformLocation(glProgram, "uVerticalBlurLimitBorderSize");
+        uBlackOverlayAlpha = GLES20.glGetUniformLocation(glProgram, "uBlackOverlayAlpha");
     }
 
 }

@@ -31,7 +31,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
 
         final int imageSize = AndroidUtilities.dp(200);
         final float zoom = 1f;
-        final int blurRadius = 300;
+        final int blurRadius = 40;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -59,12 +59,13 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         textureView.updateZoom(zoom);
         textureView.updateCornerRadius(cornerRadius);
         textureView.updateBlurRadius(blurRadius);
-        textureView.updateBlurAlpha(1f);
+        textureView.updateBlackOverlayAlpha(0.5f);
+        /*textureView.updateBlurAlpha(1f);
         textureView.updateVerticalBlurLimit(0.3f);
-        textureView.updateVerticalBlurLimitBorderSize(0.05f);
-        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(367));
-        /*textureViewLp.topMargin = AndroidUtilities.dp(350);
-        textureViewLp.leftMargin = AndroidUtilities.dp(10);*/
+        textureView.updateVerticalBlurLimitBorderSize(0.05f);*/
+        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(80), AndroidUtilities.dp(80));
+        textureViewLp.topMargin = AndroidUtilities.dp(10);
+        textureViewLp.leftMargin = AndroidUtilities.dp(10);
         containerLayout.addView(textureView, textureViewLp);
 
         setContentView(containerLayout);

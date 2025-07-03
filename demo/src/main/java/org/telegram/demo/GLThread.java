@@ -65,6 +65,10 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleUpdateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize));
     }
 
+    public void updateBlackOverlayAlpha(float overlayAlpha) {
+        glThreadHandler.post(() -> handleUpdateOverlayAlpha(overlayAlpha));
+    }
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
@@ -103,6 +107,10 @@ public class GLThread extends HandlerThread {
 
     private void handleUpdateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
         renderer.onVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+    }
+
+    private void handleUpdateOverlayAlpha(float overlayAlpha) {
+        renderer.onBlackOverlayAlphaUpdate(overlayAlpha);
     }
 
     private int frameCount = 0;

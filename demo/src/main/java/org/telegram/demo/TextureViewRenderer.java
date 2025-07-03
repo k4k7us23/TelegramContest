@@ -23,4 +23,6 @@ public interface TextureViewRenderer {
     void onBlurAlphaUpdate(float blurAlpha);
 
     void onVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize);
+
+    void onBlackOverlayAlphaUpdate(float blackOverlayAlpha);
 }

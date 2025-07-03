@@ -10,6 +10,8 @@ uniform float uVerticalBlurLimit;
 uniform float uBlurAlpha;
 uniform float uVerticalBlurLimitBorderSize;
 
+uniform float uBlackOverlayAlpha;
+
 varying vec2 vTexCoord;
 varying vec2 vVertexScale;
 
@@ -46,7 +48,7 @@ vec4 accountForVerticalBlurLimit(
 ) {
     float blurAlpha;
     if (uVerticalBlurLimit < 0.0 || uVerticalBlurLimit > 1.0) {
-        blurAlpha = 0.0;
+        blurAlpha = 1.0;
     } else {
         blurAlpha = 1.0 - smoothstep(uVerticalBlurLimit, uVerticalBlurLimit + uVerticalBlurLimitBorderSize, normalizedCoord.y);
         blurAlpha *= uBlurAlpha;
@@ -62,8 +64,9 @@ void main() {
     vec2 pixelCoord = (normalizedCoord * uViewSize);
 
     vec4 mixedColor = accountForVerticalBlurLimit(originalColor, color, normalizedCoord);
+    vec4 blackMixedColor = mix(mixedColor, vec4(0.0, 0.0, 0.0, 1.0), uBlackOverlayAlpha);
 
     float shapeAlpha = calculateAlpha(pixelCoord, uViewSize, uCornerRadius);
 
-    gl_FragColor = vec4(mixedColor.rgb, shapeAlpha);
+    gl_FragColor = vec4(blackMixedColor.rgb, shapeAlpha);
 }

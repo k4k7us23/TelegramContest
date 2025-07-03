@@ -26,6 +26,7 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     static final float DEFAULT_VERTICAL_BLUR_LIMIT = NO_VERTICAL_BLUR_LIMIT;
     static final float DEFAULT_BLUR_ALPHA = 1f;
     static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
+    static final float DEFAULT_BLACK_OVERLAY_ALPHA = 0f;
 
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final GlErrorChecker glErrorChecker = new GlErrorChecker();
@@ -129,6 +130,12 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     public void updateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
         executeWhenGlThreadIsReady(() -> {
             glThread.updateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+        });
+    }
+
+    public void updateBlackOverlayAlpha(float overlayAlpha) {
+        executeWhenGlThreadIsReady(() -> {
+            glThread.updateBlackOverlayAlpha(overlayAlpha);
         });
     }
 

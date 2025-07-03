@@ -54,6 +54,7 @@ class MyRenderer implements TextureViewRenderer {
     private float verticalBlurLimit = MyGLTextureView.DEFAULT_VERTICAL_BLUR_LIMIT;
     private float blurAlpha = MyGLTextureView.DEFAULT_BLUR_ALPHA;
     private float verticalBlurLimitBorderSize = MyGLTextureView.DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE;
+    private float blackOverlayAlpha = MyGLTextureView.DEFAULT_BLACK_OVERLAY_ALPHA;
     //endregion
 
     private CreateFBOResult horizontalBlurFBOResult;
@@ -193,6 +194,7 @@ class MyRenderer implements TextureViewRenderer {
         GLES20.glUniform1f(fragmentShader.uVerticalBlurLimit, 1f - verticalBlurLimit);
         GLES20.glUniform1f(fragmentShader.uBlurAlpha, blurAlpha);
         GLES20.glUniform1f(fragmentShader.uVerticalBlurLimitBorderSize, -verticalBlurLimitBorderSize);
+        GLES20.glUniform1f(fragmentShader.uBlackOverlayAlpha, blackOverlayAlpha);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bluredTextureId);
@@ -266,6 +268,11 @@ class MyRenderer implements TextureViewRenderer {
     @Override
     public void onVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
         this.verticalBlurLimitBorderSize = verticalBlurLimitBorderSize;
+    }
+
+    @Override
+    public void onBlackOverlayAlphaUpdate(float blackOverlayAlpha) {
+        this.blackOverlayAlpha = blackOverlayAlpha;
     }
 
     private enum BlurDirection {
