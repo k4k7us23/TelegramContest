@@ -79,6 +79,7 @@ import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
+import android.view.Choreographer;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -311,6 +312,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -799,11 +801,73 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     public static class ProfileAvatarWrapper extends ProfileAvatarView implements IAvatarView {
         private float foregroundAlpha;
-        private ImageReceiver imageReceiver = new ImageReceiver();
+        private ImageReceiver imageReceiver = new ImageReceiver(this);
         private ProfileGalleryView avatarsViewPager;
+
+        private ImageReceiver.ImageReceiverDelegate imageReceiverDelegate = new ImageReceiver.ImageReceiverDelegate() {
+            @Override
+            public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
+                boolean animationDisplayed = imageReceiver.getAnimation() != null;
+                lastUploadedImageProgress = null;
+                setEnableScaleBitmapOptimization(!animationDisplayed);
+                refreshBitmapInOpenGl();
+            }
+        };
+
 
         public ProfileAvatarWrapper(Context context) {
             super(context);
+            imageReceiver.setDelegate(imageReceiverDelegate);
+            imageReceiver.addInvalidateListener(new ImageReceiver.InvalidateListener() {
+                @Override
+                public void onInvalidate() {
+                    refreshBitmapInOpenGl();
+                }
+            });
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            imageReceiver.onAttachedToWindow();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            imageReceiver.onDetachedFromWindow();
+        }
+
+        private boolean refreshScheduled = false;
+        private Canvas stubCanvas = new Canvas();
+
+        private Integer lastUploadedImageProgress = null;
+
+        private Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
+            @Override
+            public void doFrame(long frameTimeNanos) {
+                refreshScheduled = false;
+                imageReceiver.draw(stubCanvas);
+
+                AnimatedFileDrawable animatedFileDrawable = imageReceiver.getAnimation();
+                if (animatedFileDrawable != null) {
+                    int progress = animatedFileDrawable.getCurrentProgressMs();
+                    if (!Objects.equals(lastUploadedImageProgress, progress)) {
+                        updateBitmap(imageReceiver.getBitmap());
+                        lastUploadedImageProgress = progress;
+                    }
+                } else {
+                    lastUploadedImageProgress = null;
+                    updateBitmap(imageReceiver.getBitmap());
+                }
+            }
+        };
+
+        private void refreshBitmapInOpenGl() {
+            if (!refreshScheduled) {
+                refreshScheduled = true;
+                Choreographer.getInstance().postFrameCallback(frameCallback);
+            }
         }
 
         // TODO maybe this variable is not needed
@@ -9883,7 +9947,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
                     avatarImage.setImage(videoThumbLocation, "avatar", thumbLocation, "50_50", avatarDrawable, user);
                 } else {
-                    avatarImage.setImage(videoLocation, ImageLoader.AUTOPLAY_FILTER, thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(videoLocation, ImageLoader.AUTOPLAY_FILTER, thumbLocation, "1000_1000", avatarDrawable, user);
                 }
             }
 
