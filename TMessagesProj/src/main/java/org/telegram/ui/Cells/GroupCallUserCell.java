@@ -31,6 +31,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.ImageLocation;
+import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.LiteMode;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
@@ -42,6 +43,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AnimatedEmojiDrawable;
+import org.telegram.ui.Components.Avatar.IAvatarView;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.BlobDrawable;
@@ -1097,6 +1099,30 @@ public class GroupCallUserCell extends FrameLayout {
 
     public BackupImageView getAvatarImageView() {
         return avatarImageView;
+    }
+
+    public IAvatarView getAvatarImageViewAsAvatarView() {
+        return new IAvatarView() {
+            @Override
+            public ImageReceiver getImageReceiver() {
+                return avatarImageView.getImageReceiver();
+            }
+
+            @Override
+            public View getRootView() {
+                return avatarImageView.getRootView();
+            }
+
+            @Override
+            public void hideView() {
+                // no - op
+            }
+
+            @Override
+            public void showView() {
+                // no - op
+            }
+        };
     }
 
 

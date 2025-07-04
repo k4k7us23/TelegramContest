@@ -33,8 +33,9 @@ import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.SecureDocument;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLObject;
+import org.telegram.ui.Components.Avatar.IAvatarView;
 
-public class BackupImageView extends View {
+public class BackupImageView extends View implements IAvatarView {
 
     protected ImageReceiver imageReceiver;
     protected ImageReceiver blurImageReceiver;
@@ -253,7 +254,7 @@ public class BackupImageView extends View {
     }
 
     public void setRoundRadius(int tl, int tr, int bl, int br) {
-        imageReceiver.setRoundRadius(tl, tr, bl ,br);
+        imageReceiver.setRoundRadius(tl, tr, bl, br);
         if (blurAllowed) {
             blurImageReceiver.setRoundRadius(tl, tr, bl, br);
         }
@@ -271,6 +272,20 @@ public class BackupImageView extends View {
     public ImageReceiver getImageReceiver() {
         return imageReceiver;
     }
+
+    // region: IAvatarView
+
+    @Override
+    public void hideView() {
+        // no - op
+    }
+
+    @Override
+    public void showView() {
+        // no - op
+    }
+
+    // endregion
 
     public void setSize(int w, int h) {
         width = w;
@@ -374,7 +389,7 @@ public class BackupImageView extends View {
     }
 
     ValueAnimator roundRadiusAnimator;
-    
+
     public void animateToRoundRadius(int animateToRad) {
         if (getRoundRadius()[0] != animateToRad) {
             if (roundRadiusAnimator != null) {
