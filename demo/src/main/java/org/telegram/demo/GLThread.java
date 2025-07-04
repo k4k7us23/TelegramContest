@@ -3,6 +3,7 @@ package org.telegram.demo;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.view.Choreographer;
 import android.view.Surface;
 
 public class GLThread extends HandlerThread {
@@ -12,6 +13,7 @@ public class GLThread extends HandlerThread {
     private final Handler glThreadHandler;
 
     private int width, height;
+    private boolean drawScheduled = false;
 
     public GLThread(Surface surface, TextureViewRenderer renderer, int w, int h) {
         super("GlThread");
@@ -26,8 +28,10 @@ public class GLThread extends HandlerThread {
 
         glThreadHandler = new Handler(getLooper());
         glThreadHandler.post(this::handleInitDrawing);
-        glThreadHandler.post(this::handleDrawFrame);
+        glThreadHandler.post(this::scheduleDraw);
     }
+
+    // region: main thread
 
     public void requestStop() {
         glThreadHandler.post(this::handleRequestStop);
@@ -69,10 +73,15 @@ public class GLThread extends HandlerThread {
         glThreadHandler.post(() -> handleUpdateOverlayAlpha(overlayAlpha));
     }
 
+    // endregion
+
+    // region: background thread
+
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
         renderer.onSurfaceChanged(w, h);
+        scheduleDraw();
     }
 
     private void handleInitDrawing() {
@@ -83,56 +92,68 @@ public class GLThread extends HandlerThread {
 
     private void handleUpdateBitmap(Bitmap bitmap) {
         renderer.onBitmapUpdate(bitmap);
+        scheduleDraw();
     }
 
     private void handleUpdateZoom(float zoom) {
         renderer.onZoomUpdate(zoom);
+        scheduleDraw();
     }
 
     private void handleUpdateCornerRadius(float cornerRadius) {
         renderer.onCornerRadiusUpdate(cornerRadius);
+        scheduleDraw();
     }
 
     private void handleUpdateBlurRadius(int blurRadius) {
         renderer.onBlurRadiusUpdate(blurRadius);
+        scheduleDraw();
     }
 
     private void handleUpdateVerticalBlurLimit(float verticalBlurLimit) {
         renderer.onVerticalBlurLimitUpdate(verticalBlurLimit);
+        scheduleDraw();
     }
 
     private void handleUpdateBlurAlpha(float blurAlpha) {
         renderer.onBlurAlphaUpdate(blurAlpha);
+        scheduleDraw();
     }
 
     private void handleUpdateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
         renderer.onVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+        scheduleDraw();
     }
 
     private void handleUpdateOverlayAlpha(float overlayAlpha) {
         renderer.onBlackOverlayAlphaUpdate(overlayAlpha);
+        scheduleDraw();
     }
 
-    private int frameCount = 0;
+    private void scheduleDraw() {
+        if (!drawScheduled) {
+            drawScheduled = true;
+            Choreographer.getInstance().postFrameCallback(frameTimeNanos -> {
+                try {
+                    handleDrawFrame();
+                } finally {
+                    drawScheduled = false;
+                }
+            });
+        }
+    }
 
-    // TODO consider posting of handle draw frame only when needed. for example when gpu finished rendering of previous frame.
-    // TODO consider posting of handle draw frame in sync with choreographer
     private void handleDrawFrame() {
         eglHelper.makeCurrent();
 
         renderer.onDrawFrame();
         eglHelper.swapBuffers();
-
-        // TODO change to constant redraw
-        glThreadHandler.post(this::handleDrawFrame);
-        /*// TODO remove frame count limit
-        if (frameCount++ < 100) {
-            glThreadHandler.postDelayed(this::handleDrawFrame, 100);
-        }*/
     }
 
     private void handleRequestStop() {
         eglHelper.releaseEGL();
         quitSafely();
     }
+
+    // endregion
 }
