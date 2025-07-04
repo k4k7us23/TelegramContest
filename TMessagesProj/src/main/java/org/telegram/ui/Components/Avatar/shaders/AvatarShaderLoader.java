@@ -1,4 +1,4 @@
-package org.telegram.demo.avatar.shaders;
+package org.telegram.ui.Components.Avatar.shaders;
 
 import android.content.Context;
 import android.opengl.GLES20;

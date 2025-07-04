@@ -1,4 +1,4 @@
-package org.telegram.demo.avatar.rendering;
+package org.telegram.ui.Components.Avatar.rendering;
 
 import android.graphics.Bitmap;
 import android.os.Handler;

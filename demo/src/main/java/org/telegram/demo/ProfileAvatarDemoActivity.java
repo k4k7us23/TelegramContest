@@ -10,20 +10,20 @@ import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import org.telegram.demo.avatar.ProfileAvatarView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.Components.Avatar.ProfileAvatarView;
 import org.telegram.ui.Components.AvatarDrawable;
 
 public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver.ImageReceiverDelegate {
 
     private ImageView imageView;
-    private ProfileAvatarView textureView;
+    final int cornerRadius = AndroidUtilities.dp(20);
 
     private int currentAccount = UserConfig.selectedAccount;
-    final int cornerRadius = AndroidUtilities.dp(40);
+    private ProfileAvatarView profileAvatarView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +31,7 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
 
         final int imageSize = AndroidUtilities.dp(200);
         final float zoom = 1f;
-        final int blurRadius = 40;
+        final int blurRadius = 20;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -55,34 +55,30 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
         });
 
 
-        textureView = new ProfileAvatarView(this);
-        textureView.updateZoom(zoom);
-        textureView.updateCornerRadius(cornerRadius);
-        textureView.updateBlurRadius(blurRadius);
-        textureView.updateBlackOverlayAlpha(0.5f);
-        /*textureView.updateBlurAlpha(1f);
-        textureView.updateVerticalBlurLimit(0.3f);
-        textureView.updateVerticalBlurLimitBorderSize(0.05f);*/
-        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(AndroidUtilities.dp(80), AndroidUtilities.dp(80));
+        profileAvatarView = new ProfileAvatarView(this);
+        profileAvatarView.updateZoom(zoom);
+        profileAvatarView.updateCornerRadius(cornerRadius);
+        profileAvatarView.updateBlurRadius(blurRadius);
+        profileAvatarView.updateBlackOverlayAlpha(0.2f);
+        FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(imageSize, imageSize);
         textureViewLp.topMargin = AndroidUtilities.dp(10);
         textureViewLp.leftMargin = AndroidUtilities.dp(10);
-        containerLayout.addView(textureView, textureViewLp);
+        containerLayout.addView(profileAvatarView, textureViewLp);
 
         setContentView(containerLayout);
 
-        //loadUserAvatarIntoImageView();
         loadStaticImageIntoImageView();
 
         /*ValueAnimator blurAnimator = ValueAnimator.ofInt(1, 100).setDuration(1_000);
         blurAnimator.addUpdateListener(animation -> {
-            textureView.updateBlurRadius((Integer) animation.getAnimatedValue());
+            profileAvatarView.updateBlurRadius((Integer) animation.getAnimatedValue());
         });
 
         ValueAnimator sizeAnimator = ValueAnimator.ofInt(AndroidUtilities.dp(200), AndroidUtilities.dp(120)).setDuration(1_000);
         sizeAnimator.addUpdateListener(animation -> {
-            ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
+            ViewGroup.LayoutParams layoutParams = profileAvatarView.getLayoutParams();
             layoutParams.height = layoutParams.width = (int) animation.getAnimatedValue();
-            textureView.setLayoutParams(layoutParams);
+            profileAvatarView.setLayoutParams(layoutParams);
         });
         sizeAnimator.setDuration(5_000);
 
@@ -110,15 +106,15 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
         animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.addUpdateListener(animation -> {
-            textureView.updateZoom((Float) animation.getAnimatedValue());
-            textureView.updateCornerRadius(Math.round(cornerRadius + AndroidUtilities.dp(40) * animator.getAnimatedFraction()));
+            profileAvatarView.updateZoom((Float) animation.getAnimatedValue());
+            profileAvatarView.updateCornerRadius(Math.round(cornerRadius + AndroidUtilities.dp(40) * animator.getAnimatedFraction()));
         });
         animator.start();
     }
 
     private void loadStaticImageIntoImageView() {
         Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "1.jpg");
-        textureView.updateBitmap(bitmap);
+        profileAvatarView.updateBitmap(bitmap);
         imageView.setImageBitmap(bitmap);
     }
 
@@ -138,7 +134,7 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
     public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
         Bitmap bitmap = imageReceiver.getBitmap();
         imageView.setImageBitmap(bitmap);
-        textureView.updateBitmap(bitmap);
+        profileAvatarView.updateBitmap(bitmap);
     }
 
 }

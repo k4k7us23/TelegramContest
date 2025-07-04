@@ -1,8 +1,8 @@
-package org.telegram.demo.avatar.shaders;
+package org.telegram.ui.Components.Avatar.shaders;
 
 import android.opengl.GLES20;
 
-import org.telegram.demo.R;
+import org.telegram.messenger.R;
 
 import java.io.IOException;
 

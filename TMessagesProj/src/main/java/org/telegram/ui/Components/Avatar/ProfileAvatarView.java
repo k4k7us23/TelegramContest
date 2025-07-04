@@ -1,4 +1,4 @@
-package org.telegram.demo.avatar;
+package org.telegram.ui.Components.Avatar;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -7,13 +7,13 @@ import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.TextureView;
 
-import org.telegram.demo.ApplicationLoaderImpl;
-import org.telegram.demo.avatar.rendering.ProfileAvatarGLThread;
-import org.telegram.demo.avatar.rendering.ProfileAvatarRendererImpl;
-import org.telegram.demo.avatar.shaders.AvatarProgramFactory;
-import org.telegram.demo.avatar.rendering.ProfileAvatarGlErrorChecker;
-import org.telegram.demo.avatar.shaders.AvatarShaderLoader;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.ui.Components.Avatar.rendering.ProfileAvatarGLThread;
+import org.telegram.ui.Components.Avatar.rendering.ProfileAvatarGlErrorChecker;
+import org.telegram.ui.Components.Avatar.rendering.ProfileAvatarRendererImpl;
+import org.telegram.ui.Components.Avatar.shaders.AvatarProgramFactory;
+import org.telegram.ui.Components.Avatar.shaders.AvatarShaderLoader;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -32,7 +32,7 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     public static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
     public static final float DEFAULT_BLACK_OVERLAY_ALPHA = 0f;
 
-    private final AvatarShaderLoader shaderLoader = new AvatarShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
+    private final AvatarShaderLoader shaderLoader = new AvatarShaderLoader(ApplicationLoader.applicationLoaderInstance);
     private final ProfileAvatarGlErrorChecker glErrorChecker = new ProfileAvatarGlErrorChecker();
     private ProfileAvatarRendererImpl profileAvatarRendererImpl;
     private ProfileAvatarGLThread profileAvatarGlThread;

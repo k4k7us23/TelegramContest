@@ -1,16 +1,16 @@
-package org.telegram.demo.avatar.rendering;
+package org.telegram.ui.Components.Avatar.rendering;
 
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
-import org.telegram.demo.avatar.ProfileAvatarView;
-import org.telegram.demo.avatar.shaders.AvatarBlurProgram;
-import org.telegram.demo.avatar.shaders.AvatarBlurVertexShader;
-import org.telegram.demo.avatar.shaders.ZoomAndCropFragmentShader;
-import org.telegram.demo.avatar.shaders.AvatarProgramFactory;
-import org.telegram.demo.avatar.shaders.ZoomAndCropVertexShader;
-import org.telegram.demo.avatar.shaders.ZoomAndCropProgram;
+import org.telegram.ui.Components.Avatar.ProfileAvatarView;
+import org.telegram.ui.Components.Avatar.shaders.AvatarBlurProgram;
+import org.telegram.ui.Components.Avatar.shaders.AvatarBlurVertexShader;
+import org.telegram.ui.Components.Avatar.shaders.ZoomAndCropFragmentShader;
+import org.telegram.ui.Components.Avatar.shaders.AvatarProgramFactory;
+import org.telegram.ui.Components.Avatar.shaders.ZoomAndCropVertexShader;
+import org.telegram.ui.Components.Avatar.shaders.ZoomAndCropProgram;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

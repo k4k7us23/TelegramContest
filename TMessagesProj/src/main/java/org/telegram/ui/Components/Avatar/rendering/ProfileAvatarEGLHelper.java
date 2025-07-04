@@ -1,4 +1,4 @@
-package org.telegram.demo.avatar.rendering;
+package org.telegram.ui.Components.Avatar.rendering;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
