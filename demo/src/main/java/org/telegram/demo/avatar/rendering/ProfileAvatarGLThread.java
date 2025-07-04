@@ -1,4 +1,4 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.rendering;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -6,23 +6,23 @@ import android.os.HandlerThread;
 import android.view.Choreographer;
 import android.view.Surface;
 
-public class GLThread extends HandlerThread {
-    private final EGLHelper eglHelper;
-    private final TextureViewRenderer renderer;
+public class ProfileAvatarGLThread extends HandlerThread {
+    private final ProfileAvatarEGLHelper profileAvatarEglHelper;
+    private final ProfileAvatarRenderer renderer;
 
     private final Handler glThreadHandler;
 
     private int width, height;
     private boolean drawScheduled = false;
 
-    public GLThread(Surface surface, TextureViewRenderer renderer, int w, int h) {
-        super("GlThread");
+    public ProfileAvatarGLThread(Surface surface, ProfileAvatarRenderer renderer, int w, int h) {
+        super("ProfileAvatarGLThread");
 
         this.renderer = renderer;
         this.width = w;
         this.height = h;
 
-        eglHelper = new EGLHelper(surface);
+        profileAvatarEglHelper = new ProfileAvatarEGLHelper(surface);
 
         start();
 
@@ -85,7 +85,7 @@ public class GLThread extends HandlerThread {
     }
 
     private void handleInitDrawing() {
-        eglHelper.initEGL();
+        profileAvatarEglHelper.initEGL();
         renderer.onSurfaceCreated();
         renderer.onSurfaceChanged(width, height);
     }
@@ -144,14 +144,14 @@ public class GLThread extends HandlerThread {
     }
 
     private void handleDrawFrame() {
-        eglHelper.makeCurrent();
+        profileAvatarEglHelper.makeCurrent();
 
         renderer.onDrawFrame();
-        eglHelper.swapBuffers();
+        profileAvatarEglHelper.swapBuffers();
     }
 
     private void handleRequestStop() {
-        eglHelper.releaseEGL();
+        profileAvatarEglHelper.releaseEGL();
         quitSafely();
     }
 

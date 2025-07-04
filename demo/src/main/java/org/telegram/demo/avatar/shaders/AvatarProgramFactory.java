@@ -1,12 +1,12 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.shaders;
 
 import android.opengl.GLES20;
 
-import org.telegram.demo.utils.ShaderLoader;
+import org.telegram.demo.R;
 
 import java.io.IOException;
 
-class AvatarProgramFactory {
+public class AvatarProgramFactory {
 
     private final ShaderLoader shaderLoader;
     public ZoomAndCropProgram zoomAndCropProgram;

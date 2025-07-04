@@ -1,4 +1,4 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.shaders;
 
 import android.opengl.GLES20;
 
@@ -12,7 +12,7 @@ public class AvatarVertexShader {
 
     private final int glProgram;
 
-    public AvatarVertexShader(int glProgram) {
+    AvatarVertexShader(int glProgram) {
         this.glProgram = glProgram;
 
         aPositionHandle = GLES20.glGetAttribLocation(glProgram, "aPosition");

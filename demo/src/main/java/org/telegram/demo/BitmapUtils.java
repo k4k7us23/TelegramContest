@@ -1,4 +1,4 @@
-package org.telegram.demo.utils;
+package org.telegram.demo;
 
 import android.content.Context;
 import android.content.res.AssetManager;

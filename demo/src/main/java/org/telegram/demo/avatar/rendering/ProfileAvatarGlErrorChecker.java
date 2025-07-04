@@ -1,9 +1,9 @@
-package org.telegram.demo.utils;
+package org.telegram.demo.avatar.rendering;
 
 import android.opengl.GLES20;
 import android.util.Log;
 
-public class GlErrorChecker {
+public class ProfileAvatarGlErrorChecker {
 
     private static final String TAG = "GLErrors";
 

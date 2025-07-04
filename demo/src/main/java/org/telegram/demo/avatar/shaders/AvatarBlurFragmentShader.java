@@ -1,8 +1,8 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.shaders;
 
 import android.opengl.GLES20;
 
-class AvatarBlurFragmentShader {
+public class AvatarBlurFragmentShader {
 
     private final int glProgram;
 
@@ -12,7 +12,7 @@ class AvatarBlurFragmentShader {
     public int uRadiusHandle;
     public int uDirHandle;
 
-    public AvatarBlurFragmentShader(int glProgram) {
+    AvatarBlurFragmentShader(int glProgram) {
         this.glProgram = glProgram;
 
         uTextureHandle = GLES20.glGetUniformLocation(glProgram, "uTexture");

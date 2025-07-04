@@ -1,19 +1,25 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.rendering;
 
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
-import org.telegram.demo.utils.GlErrorChecker;
+import org.telegram.demo.avatar.ProfileAvatarView;
+import org.telegram.demo.avatar.shaders.AvatarBlurProgram;
+import org.telegram.demo.avatar.shaders.AvatarBlurVertexShader;
+import org.telegram.demo.avatar.shaders.AvatarFragmentShader;
+import org.telegram.demo.avatar.shaders.AvatarProgramFactory;
+import org.telegram.demo.avatar.shaders.AvatarVertexShader;
+import org.telegram.demo.avatar.shaders.ZoomAndCropProgram;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-class MyRenderer implements TextureViewRenderer {
+public class ProfileAvatarRendererImpl implements ProfileAvatarRenderer {
     private final AvatarProgramFactory avatarProgramFactory;
-    private final GlErrorChecker glErrorChecker;
+    private final ProfileAvatarGlErrorChecker glErrorChecker;
 
     // Full-screen quad (X,Y,Z)
     private final float[] verticesData = {
@@ -48,20 +54,20 @@ class MyRenderer implements TextureViewRenderer {
     private int bitmapWidth, bitmapHeight;
 
     // region: external params
-    private float zoom = MyGLTextureView.DEFAULT_ZOOM;
-    private float cornerRadius = MyGLTextureView.DEFAULT_CORNER_RADIUS;
-    private int blurRadius = MyGLTextureView.DEFAULT_BLUR_RADIUS;
-    private float verticalBlurLimit = MyGLTextureView.DEFAULT_VERTICAL_BLUR_LIMIT;
-    private float blurAlpha = MyGLTextureView.DEFAULT_BLUR_ALPHA;
-    private float verticalBlurLimitBorderSize = MyGLTextureView.DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE;
-    private float blackOverlayAlpha = MyGLTextureView.DEFAULT_BLACK_OVERLAY_ALPHA;
+    private float zoom = ProfileAvatarView.DEFAULT_ZOOM;
+    private float cornerRadius = ProfileAvatarView.DEFAULT_CORNER_RADIUS;
+    private int blurRadius = ProfileAvatarView.DEFAULT_BLUR_RADIUS;
+    private float verticalBlurLimit = ProfileAvatarView.DEFAULT_VERTICAL_BLUR_LIMIT;
+    private float blurAlpha = ProfileAvatarView.DEFAULT_BLUR_ALPHA;
+    private float verticalBlurLimitBorderSize = ProfileAvatarView.DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE;
+    private float blackOverlayAlpha = ProfileAvatarView.DEFAULT_BLACK_OVERLAY_ALPHA;
     //endregion
 
     private CreateFBOResult horizontalBlurFBOResult;
     private CreateFBOResult verticalBlurFBOResult;
     private boolean blurCalculated = false;
 
-    public MyRenderer(AvatarProgramFactory avatarProgramFactory, GlErrorChecker glErrorChecker) throws IOException {
+    public ProfileAvatarRendererImpl(AvatarProgramFactory avatarProgramFactory, ProfileAvatarGlErrorChecker glErrorChecker) throws IOException {
         this.avatarProgramFactory = avatarProgramFactory;
         this.glErrorChecker = glErrorChecker;
     }

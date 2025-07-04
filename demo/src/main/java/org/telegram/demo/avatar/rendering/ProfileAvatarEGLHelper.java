@@ -1,4 +1,4 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.rendering;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
@@ -7,13 +7,13 @@ import android.opengl.EGLDisplay;
 import android.opengl.EGLSurface;
 import android.view.Surface;
 
-public class EGLHelper {
+class ProfileAvatarEGLHelper {
     private final Surface surface;
     private EGLDisplay eglDisplay;
     private EGLContext eglContext;
     private EGLSurface eglSurface;
 
-    public EGLHelper(Surface surface) {
+    public ProfileAvatarEGLHelper(Surface surface) {
         this.surface = surface;
     }
 

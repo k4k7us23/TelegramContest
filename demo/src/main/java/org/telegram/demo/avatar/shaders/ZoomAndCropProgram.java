@@ -1,15 +1,15 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.shaders;
 
 import android.opengl.GLES20;
 
-class ZoomAndCropProgram {
+public class ZoomAndCropProgram {
 
     public final int glProgram;
 
     public final AvatarFragmentShader fragmentShader;
     public final AvatarVertexShader vertexShader;
 
-    public ZoomAndCropProgram(int avatarVertexShaderPtr, int avatarFragmentShaderPtr) {
+    ZoomAndCropProgram(int avatarVertexShaderPtr, int avatarFragmentShaderPtr) {
         glProgram = GLES20.glCreateProgram();
 
         GLES20.glAttachShader(glProgram, avatarVertexShaderPtr);

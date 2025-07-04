@@ -10,7 +10,7 @@ import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import org.telegram.demo.utils.BitmapUtils;
+import org.telegram.demo.avatar.ProfileAvatarView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.UserConfig;
@@ -20,7 +20,7 @@ import org.telegram.ui.Components.AvatarDrawable;
 public class DemoActivity extends Activity implements ImageReceiver.ImageReceiverDelegate {
 
     private ImageView imageView;
-    private MyGLTextureView textureView;
+    private ProfileAvatarView textureView;
 
     private int currentAccount = UserConfig.selectedAccount;
     final int cornerRadius = AndroidUtilities.dp(40);
@@ -55,7 +55,7 @@ public class DemoActivity extends Activity implements ImageReceiver.ImageReceive
         });
 
 
-        textureView = new MyGLTextureView(this);
+        textureView = new ProfileAvatarView(this);
         textureView.updateZoom(zoom);
         textureView.updateCornerRadius(cornerRadius);
         textureView.updateBlurRadius(blurRadius);

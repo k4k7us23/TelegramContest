@@ -1,4 +1,4 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -7,46 +7,50 @@ import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.TextureView;
 
-import org.telegram.demo.utils.GlErrorChecker;
-import org.telegram.demo.utils.ShaderLoader;
+import org.telegram.demo.ApplicationLoaderImpl;
+import org.telegram.demo.avatar.rendering.ProfileAvatarGLThread;
+import org.telegram.demo.avatar.rendering.ProfileAvatarRendererImpl;
+import org.telegram.demo.avatar.shaders.AvatarProgramFactory;
+import org.telegram.demo.avatar.rendering.ProfileAvatarGlErrorChecker;
+import org.telegram.demo.avatar.shaders.ShaderLoader;
 import org.telegram.messenger.AndroidUtilities;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-public class MyGLTextureView extends TextureView implements TextureView.SurfaceTextureListener {
+public class ProfileAvatarView extends TextureView implements TextureView.SurfaceTextureListener {
 
     // Make sure this value is synced with avatar_frag.glsl
     public static final float NO_VERTICAL_BLUR_LIMIT = -1f;
 
-    static final float DEFAULT_ZOOM = 1f;
-    static final float DEFAULT_CORNER_RADIUS = 0f;
-    static final int DEFAULT_BLUR_RADIUS = 1;
-    static final float DEFAULT_VERTICAL_BLUR_LIMIT = NO_VERTICAL_BLUR_LIMIT;
-    static final float DEFAULT_BLUR_ALPHA = 1f;
-    static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
-    static final float DEFAULT_BLACK_OVERLAY_ALPHA = 0f;
+    public static final float DEFAULT_ZOOM = 1f;
+    public static final float DEFAULT_CORNER_RADIUS = 0f;
+    public static final int DEFAULT_BLUR_RADIUS = 1;
+    public static final float DEFAULT_VERTICAL_BLUR_LIMIT = NO_VERTICAL_BLUR_LIMIT;
+    public static final float DEFAULT_BLUR_ALPHA = 1f;
+    public static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
+    public static final float DEFAULT_BLACK_OVERLAY_ALPHA = 0f;
 
     private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
-    private final GlErrorChecker glErrorChecker = new GlErrorChecker();
-    private MyRenderer myRenderer;
-    private GLThread glThread;
+    private final ProfileAvatarGlErrorChecker glErrorChecker = new ProfileAvatarGlErrorChecker();
+    private ProfileAvatarRendererImpl profileAvatarRendererImpl;
+    private ProfileAvatarGLThread profileAvatarGlThread;
     private Queue<Runnable> glThreadActionsQueue = new ArrayDeque<>();
 
     private final int scaleBitmapHeight = AndroidUtilities.dp(120);
 
-    public MyGLTextureView(Context context) {
+    public ProfileAvatarView(Context context) {
         super(context);
         init();
     }
 
-    public MyGLTextureView(Context context, AttributeSet attrs) {
+    public ProfileAvatarView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public MyGLTextureView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ProfileAvatarView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -55,7 +59,7 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
         setSurfaceTextureListener(this);
         setOpaque(false);
         try {
-            myRenderer = new MyRenderer(new AvatarProgramFactory(shaderLoader), glErrorChecker);
+            profileAvatarRendererImpl = new ProfileAvatarRendererImpl(new AvatarProgramFactory(shaderLoader), glErrorChecker);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -92,57 +96,57 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
         if (sentBitmap != bitmap) {
             sentBitmap = bitmap;
             executeWhenGlThreadIsReady(() -> {
-                glThread.updateBitmap(bitmap);
+                profileAvatarGlThread.updateBitmap(bitmap);
             });
         }
     }
 
     public void updateZoom(float zoom) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateZoom(zoom);
+            profileAvatarGlThread.updateZoom(zoom);
         });
     }
 
     public void updateCornerRadius(float cornerRadius) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateCornerRadius(cornerRadius);
+            profileAvatarGlThread.updateCornerRadius(cornerRadius);
         });
     }
 
     public void updateBlurRadius(int blurRadius) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateBlurRadius(blurRadius);
+            profileAvatarGlThread.updateBlurRadius(blurRadius);
         });
     }
 
     public void updateVerticalBlurLimit(float verticalBlurLimit) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateVerticalBlurLimit(verticalBlurLimit);
+            profileAvatarGlThread.updateVerticalBlurLimit(verticalBlurLimit);
         });
     }
 
     public void updateBlurAlpha(float blurAlpha) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateBlurAlpha(blurAlpha);
+            profileAvatarGlThread.updateBlurAlpha(blurAlpha);
         });
     }
 
     public void updateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+            profileAvatarGlThread.updateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
         });
     }
 
     public void updateBlackOverlayAlpha(float overlayAlpha) {
         executeWhenGlThreadIsReady(() -> {
-            glThread.updateBlackOverlayAlpha(overlayAlpha);
+            profileAvatarGlThread.updateBlackOverlayAlpha(overlayAlpha);
         });
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
         viewSizeMn = Math.min(width, height);
-        glThread = new GLThread(new Surface(surfaceTexture), myRenderer, width, height);
+        profileAvatarGlThread = new ProfileAvatarGLThread(new Surface(surfaceTexture), profileAvatarRendererImpl, width, height);
         while (!glThreadActionsQueue.isEmpty()) {
             glThreadActionsQueue.poll().run();
         }
@@ -152,17 +156,17 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
         viewSizeMn = Math.min(width, height);
-        if (glThread != null) {
-            glThread.onSurfaceChanged(width, height);
+        if (profileAvatarGlThread != null) {
+            profileAvatarGlThread.onSurfaceChanged(width, height);
         }
         updateBitmapInternal(getBitmapForRendering());
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        if (glThread != null) {
-            glThread.requestStop();
-            glThread = null;
+        if (profileAvatarGlThread != null) {
+            profileAvatarGlThread.requestStop();
+            profileAvatarGlThread = null;
         }
         return true;
     }
@@ -172,7 +176,7 @@ public class MyGLTextureView extends TextureView implements TextureView.SurfaceT
     }
 
     private void executeWhenGlThreadIsReady(Runnable action) {
-        if (glThread != null) {
+        if (profileAvatarGlThread != null) {
             action.run();
         } else {
             glThreadActionsQueue.add(action);

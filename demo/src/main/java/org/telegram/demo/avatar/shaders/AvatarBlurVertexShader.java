@@ -1,4 +1,4 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.shaders;
 
 import android.opengl.GLES20;
 
@@ -8,7 +8,7 @@ public class AvatarBlurVertexShader {
 
     private final int glProgram;
 
-    public AvatarBlurVertexShader(int glProgram) {
+    AvatarBlurVertexShader(int glProgram) {
         this.glProgram = glProgram;
 
         aPositionHandle = GLES20.glGetAttribLocation(glProgram, "aPosition");

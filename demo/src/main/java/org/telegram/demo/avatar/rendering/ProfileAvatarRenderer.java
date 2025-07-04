@@ -1,8 +1,8 @@
-package org.telegram.demo;
+package org.telegram.demo.avatar.rendering;
 
 import android.graphics.Bitmap;
 
-public interface TextureViewRenderer {
+public interface ProfileAvatarRenderer {
 
     void onSurfaceCreated();
 
