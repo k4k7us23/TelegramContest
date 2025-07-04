@@ -7,9 +7,9 @@ import android.opengl.GLUtils;
 import org.telegram.demo.avatar.ProfileAvatarView;
 import org.telegram.demo.avatar.shaders.AvatarBlurProgram;
 import org.telegram.demo.avatar.shaders.AvatarBlurVertexShader;
-import org.telegram.demo.avatar.shaders.AvatarFragmentShader;
+import org.telegram.demo.avatar.shaders.ZoomAndCropFragmentShader;
 import org.telegram.demo.avatar.shaders.AvatarProgramFactory;
-import org.telegram.demo.avatar.shaders.AvatarVertexShader;
+import org.telegram.demo.avatar.shaders.ZoomAndCropVertexShader;
 import org.telegram.demo.avatar.shaders.ZoomAndCropProgram;
 
 import java.io.IOException;
@@ -177,8 +177,8 @@ public class ProfileAvatarRendererImpl implements ProfileAvatarRenderer {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
         GLES20.glUseProgram(zoomAndCropProgram.glProgram);
 
-        AvatarVertexShader vertexShader = zoomAndCropProgram.vertexShader;
-        AvatarFragmentShader fragmentShader = zoomAndCropProgram.fragmentShader;
+        ZoomAndCropVertexShader vertexShader = zoomAndCropProgram.vertexShader;
+        ZoomAndCropFragmentShader fragmentShader = zoomAndCropProgram.fragmentShader;
 
         GLES20.glEnableVertexAttribArray(vertexShader.aPositionHandle);
         GLES20.glVertexAttribPointer(vertexShader.aPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);

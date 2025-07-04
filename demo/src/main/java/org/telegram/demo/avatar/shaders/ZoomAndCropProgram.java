@@ -6,8 +6,8 @@ public class ZoomAndCropProgram {
 
     public final int glProgram;
 
-    public final AvatarFragmentShader fragmentShader;
-    public final AvatarVertexShader vertexShader;
+    public final ZoomAndCropFragmentShader fragmentShader;
+    public final ZoomAndCropVertexShader vertexShader;
 
     ZoomAndCropProgram(int avatarVertexShaderPtr, int avatarFragmentShaderPtr) {
         glProgram = GLES20.glCreateProgram();
@@ -16,7 +16,7 @@ public class ZoomAndCropProgram {
         GLES20.glAttachShader(glProgram, avatarFragmentShaderPtr);
         GLES20.glLinkProgram(glProgram);
 
-        vertexShader = new AvatarVertexShader(glProgram);
-        fragmentShader = new AvatarFragmentShader(glProgram);
+        vertexShader = new ZoomAndCropVertexShader(glProgram);
+        fragmentShader = new ZoomAndCropFragmentShader(glProgram);
     }
 }

@@ -2,7 +2,7 @@ package org.telegram.demo.avatar.shaders;
 
 import android.opengl.GLES20;
 
-public class AvatarFragmentShader {
+public class ZoomAndCropFragmentShader {
 
     private final int glProgram;
 
@@ -15,7 +15,7 @@ public class AvatarFragmentShader {
     public int uVerticalBlurLimitBorderSize;
     public int uBlackOverlayAlpha;
 
-    AvatarFragmentShader(int glProgram) {
+    ZoomAndCropFragmentShader(int glProgram) {
         this.glProgram = glProgram;
 
         uTextureHandle = GLES20.glGetUniformLocation(glProgram, "uTexture");

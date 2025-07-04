@@ -8,11 +8,11 @@ import java.io.IOException;
 
 public class AvatarProgramFactory {
 
-    private final ShaderLoader shaderLoader;
+    private final AvatarShaderLoader shaderLoader;
     public ZoomAndCropProgram zoomAndCropProgram;
     public AvatarBlurProgram avatarBlurProgram;
 
-    public AvatarProgramFactory(ShaderLoader shaderLoader) {
+    public AvatarProgramFactory(AvatarShaderLoader shaderLoader) {
         this.shaderLoader = shaderLoader;
     }
 
@@ -23,11 +23,11 @@ public class AvatarProgramFactory {
         final int avatarBlurVertexShaderPtr;
 
         try {
-            avatarVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_vert);
-            avatarFragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_frag);
+            avatarVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.profile_avatar_zoom_and_crop_vert);
+            avatarFragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.profile_avatar_zoom_and_crop_frag);
 
-            avatarBlurVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.avatar_blur_vert);
-            avatarBlurFragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.avatar_blur_frag);
+            avatarBlurVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.profile_avatar_blur_vert);
+            avatarBlurFragmentShaderPtr = shaderLoader.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.profile_avatar_blur_frag);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

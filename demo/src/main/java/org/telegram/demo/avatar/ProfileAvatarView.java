@@ -12,7 +12,7 @@ import org.telegram.demo.avatar.rendering.ProfileAvatarGLThread;
 import org.telegram.demo.avatar.rendering.ProfileAvatarRendererImpl;
 import org.telegram.demo.avatar.shaders.AvatarProgramFactory;
 import org.telegram.demo.avatar.rendering.ProfileAvatarGlErrorChecker;
-import org.telegram.demo.avatar.shaders.ShaderLoader;
+import org.telegram.demo.avatar.shaders.AvatarShaderLoader;
 import org.telegram.messenger.AndroidUtilities;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     public static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
     public static final float DEFAULT_BLACK_OVERLAY_ALPHA = 0f;
 
-    private final ShaderLoader shaderLoader = new ShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
+    private final AvatarShaderLoader shaderLoader = new AvatarShaderLoader(ApplicationLoaderImpl.applicationLoaderInstance);
     private final ProfileAvatarGlErrorChecker glErrorChecker = new ProfileAvatarGlErrorChecker();
     private ProfileAvatarRendererImpl profileAvatarRendererImpl;
     private ProfileAvatarGLThread profileAvatarGlThread;

@@ -17,7 +17,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.AvatarDrawable;
 
-public class DemoActivity extends Activity implements ImageReceiver.ImageReceiverDelegate {
+public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver.ImageReceiverDelegate {
 
     private ImageView imageView;
     private ProfileAvatarView textureView;

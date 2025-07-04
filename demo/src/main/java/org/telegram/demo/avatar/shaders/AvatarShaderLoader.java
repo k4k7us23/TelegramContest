@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class ShaderLoader {
+public class AvatarShaderLoader {
 
     private Context context;
 
-    public ShaderLoader(Context context) {
+    public AvatarShaderLoader(Context context) {
         this.context = context;
     }
 
