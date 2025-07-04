@@ -79,6 +79,7 @@ import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
+import android.view.Choreographer;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -799,11 +800,61 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     public static class ProfileAvatarWrapper extends ProfileAvatarView implements IAvatarView {
         private float foregroundAlpha;
-        private ImageReceiver imageReceiver = new ImageReceiver();
+        private ImageReceiver imageReceiver = new ImageReceiver(this);
         private ProfileGalleryView avatarsViewPager;
+
+        private static final int SOURCE_IMAGE_WIDTH_PX = 1000;
+        private static final int SOURCE_IMAGE_HEIGHT_PX = 1000;
+
+        private ImageReceiver.ImageReceiverDelegate imageReceiverDelegate = new ImageReceiver.ImageReceiverDelegate() {
+            @Override
+            public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
+                refreshBitmapInOpenGl();
+            }
+        };
+
 
         public ProfileAvatarWrapper(Context context) {
             super(context);
+            imageReceiver.setImageCoords(0f, 0f, SOURCE_IMAGE_WIDTH_PX, SOURCE_IMAGE_HEIGHT_PX);
+            imageReceiver.setDelegate(imageReceiverDelegate);
+            imageReceiver.addInvalidateListener(new ImageReceiver.InvalidateListener() {
+                @Override
+                public void onInvalidate() {
+                    System.out.println("invalidate listener triggered");
+                    refreshBitmapInOpenGl();
+                }
+            });
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            imageReceiver.onAttachedToWindow();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            imageReceiver.onDetachedFromWindow();
+        }
+
+        private boolean refreshScheduled = false;
+
+        private void refreshBitmapInOpenGl() {
+            if (!refreshScheduled) {
+                refreshScheduled = true;
+                Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
+                    @Override
+                    public void doFrame(long frameTimeNanos) {
+                        refreshScheduled = false;
+                        Bitmap drawnBitmap = Bitmap.createBitmap(SOURCE_IMAGE_WIDTH_PX, SOURCE_IMAGE_HEIGHT_PX, Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(drawnBitmap);
+                        imageReceiver.draw(canvas);
+                        updateBitmap(drawnBitmap);
+                    }
+                });
+            }
         }
 
         // TODO maybe this variable is not needed
@@ -9883,7 +9934,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
                     avatarImage.setImage(videoThumbLocation, "avatar", thumbLocation, "50_50", avatarDrawable, user);
                 } else {
-                    avatarImage.setImage(videoLocation, ImageLoader.AUTOPLAY_FILTER, thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(videoLocation, ImageLoader.AUTOPLAY_FILTER, thumbLocation, "1000_1000", avatarDrawable, user);
                 }
             }
 

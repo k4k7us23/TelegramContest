@@ -74,9 +74,11 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     public void updateBitmap(Bitmap bitmap) {
         this.originalBitmap = bitmap;
         this.scaledBitmap = null;
-        float ratio = (float) bitmap.getWidth() / (float) bitmap.getHeight();
-        if (scaleBitmapHeight < bitmap.getHeight()) {
-            scaledBitmap = Bitmap.createScaledBitmap(bitmap, (int) (ratio * scaleBitmapHeight), scaleBitmapHeight, true);
+        if (bitmap != null) {
+            float ratio = (float) bitmap.getWidth() / (float) bitmap.getHeight();
+            if (scaleBitmapHeight < bitmap.getHeight()) {
+                scaledBitmap = Bitmap.createScaledBitmap(bitmap, (int) (ratio * scaleBitmapHeight), scaleBitmapHeight, true);
+            }
         }
 
         updateBitmapInternal(getBitmapForRendering());
