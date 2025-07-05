@@ -19,4 +19,8 @@ public class ZoomAndCropProgram {
         vertexShader = new ZoomAndCropVertexShader(glProgram);
         fragmentShader = new ZoomAndCropFragmentShader(glProgram);
     }
+
+    void releaseResources() {
+        GLES20.glDeleteProgram(glProgram);
+    }
 }

@@ -281,6 +281,24 @@ public class ProfileAvatarRendererImpl implements ProfileAvatarRenderer {
         this.blackOverlayAlpha = blackOverlayAlpha;
     }
 
+    @Override
+    public void releaseResources() {
+        if (originalBitmapTextureId != null) {
+            GLES20.glDeleteTextures(1, new int[]{originalBitmapTextureId}, 0);
+            originalBitmapTextureId = null;
+        }
+        if (horizontalBlurFBOResult != null) {
+            deleteFBOTexture(horizontalBlurFBOResult);
+            horizontalBlurFBOResult = null;
+        }
+
+        if (verticalBlurFBOResult != null) {
+            deleteFBOTexture(verticalBlurFBOResult);
+            verticalBlurFBOResult = null;
+        }
+        avatarProgramFactory.releaseResources();
+    }
+
     private enum BlurDirection {
         Vertical,
         Horizontal

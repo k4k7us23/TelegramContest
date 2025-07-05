@@ -21,6 +21,8 @@ public class ProfileAvatarGLThread extends HandlerThread {
     private Bitmap writeBitmap = null;
     private boolean bitmapUpdateScheduled = false;
 
+    private boolean stopping = false;
+
     public ProfileAvatarGLThread(Surface surface, ProfileAvatarRenderer renderer, int w, int h) {
         super("ProfileAvatarGLThread");
 
@@ -90,14 +92,18 @@ public class ProfileAvatarGLThread extends HandlerThread {
     private void handleOnSurfaceChangedImpl(int w, int h) {
         width = w;
         height = h;
-        renderer.onSurfaceChanged(w, h);
+        if (!stopping) {
+            renderer.onSurfaceChanged(w, h);
+        }
         scheduleDraw();
     }
 
     private void handleInitDrawing() {
         profileAvatarEglHelper.initEGL();
-        renderer.onSurfaceCreated();
-        renderer.onSurfaceChanged(width, height);
+        if (!stopping) {
+            renderer.onSurfaceCreated();
+            renderer.onSurfaceChanged(width, height);
+        }
     }
 
     private void handleUpdateBitmap() {
@@ -112,43 +118,59 @@ public class ProfileAvatarGLThread extends HandlerThread {
             }
         }
         if (bitmapUpdateScheduledLocal) {
-            renderer.onBitmapUpdate(readBitmap);
+            if (!stopping) {
+                renderer.onBitmapUpdate(readBitmap);
+            }
             scheduleDraw();
         }
     }
 
     private void handleUpdateZoom(float zoom) {
-        renderer.onZoomUpdate(zoom);
+        if (!stopping) {
+            renderer.onZoomUpdate(zoom);
+        }
         scheduleDraw();
     }
 
     private void handleUpdateCornerRadius(float cornerRadius) {
-        renderer.onCornerRadiusUpdate(cornerRadius);
+        if (!stopping) {
+            renderer.onCornerRadiusUpdate(cornerRadius);
+        }
         scheduleDraw();
     }
 
     private void handleUpdateBlurRadius(int blurRadius) {
-        renderer.onBlurRadiusUpdate(blurRadius);
+        if (!stopping) {
+            renderer.onBlurRadiusUpdate(blurRadius);
+        }
         scheduleDraw();
     }
 
     private void handleUpdateVerticalBlurLimit(float verticalBlurLimit) {
-        renderer.onVerticalBlurLimitUpdate(verticalBlurLimit);
+        if (!stopping) {
+            renderer.onVerticalBlurLimitUpdate(verticalBlurLimit);
+        }
         scheduleDraw();
     }
 
     private void handleUpdateBlurAlpha(float blurAlpha) {
-        renderer.onBlurAlphaUpdate(blurAlpha);
+        if (!stopping) {
+            renderer.onBlurAlphaUpdate(blurAlpha);
+        }
         scheduleDraw();
     }
 
     private void handleUpdateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
-        renderer.onVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+        if (!stopping) {
+            renderer.onVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+        }
         scheduleDraw();
     }
 
     private void handleUpdateOverlayAlpha(float overlayAlpha) {
-        renderer.onBlackOverlayAlphaUpdate(overlayAlpha);
+        if (!stopping) {
+            renderer.onBlackOverlayAlphaUpdate(overlayAlpha);
+        }
         scheduleDraw();
     }
 
@@ -168,12 +190,15 @@ public class ProfileAvatarGLThread extends HandlerThread {
     private void handleDrawFrame() {
         profileAvatarEglHelper.makeCurrent();
 
-        renderer.onDrawFrame();
+        if (!stopping) {
+            renderer.onDrawFrame();
+        }
         profileAvatarEglHelper.swapBuffers();
     }
 
     private void handleRequestStop() {
-        // TODO release renderer resources
+        stopping = true;
+        renderer.releaseResources();
         profileAvatarEglHelper.releaseEGL();
         quitSafely();
     }

@@ -58,11 +58,6 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     private void init() {
         setSurfaceTextureListener(this);
         setOpaque(false);
-        try {
-            profileAvatarRendererImpl = new ProfileAvatarRendererImpl(new AvatarProgramFactory(shaderLoader), glErrorChecker);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private Integer viewSizeMn = null;
@@ -150,6 +145,11 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
         viewSizeMn = Math.min(width, height);
+        try {
+            profileAvatarRendererImpl = new ProfileAvatarRendererImpl(new AvatarProgramFactory(shaderLoader), glErrorChecker);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         profileAvatarGlThread = new ProfileAvatarGLThread(new Surface(surfaceTexture), profileAvatarRendererImpl, width, height);
         while (!glThreadActionsQueue.isEmpty()) {
             glThreadActionsQueue.poll().run();

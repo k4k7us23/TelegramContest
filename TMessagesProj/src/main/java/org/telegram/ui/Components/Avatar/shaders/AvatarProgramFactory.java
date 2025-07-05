@@ -16,11 +16,13 @@ public class AvatarProgramFactory {
         this.shaderLoader = shaderLoader;
     }
 
+    private int avatarVertexShaderPtr;
+    private int avatarFragmentShaderPtr;
+    private int avatarBlurFragmentShaderPtr;
+    private int avatarBlurVertexShaderPtr;
+
     public void onSurfaceCreated() {
-        final int avatarVertexShaderPtr;
-        final int avatarFragmentShaderPtr;
-        final int avatarBlurFragmentShaderPtr;
-        final int avatarBlurVertexShaderPtr;
+
 
         try {
             avatarVertexShaderPtr = shaderLoader.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.profile_avatar_zoom_and_crop_vert);
@@ -34,5 +36,15 @@ public class AvatarProgramFactory {
 
         zoomAndCropProgram = new ZoomAndCropProgram(avatarVertexShaderPtr, avatarFragmentShaderPtr);
         avatarBlurProgram = new AvatarBlurProgram(avatarBlurVertexShaderPtr, avatarBlurFragmentShaderPtr);
+    }
+
+    public void releaseResources() {
+        GLES20.glDeleteShader(avatarVertexShaderPtr);
+        GLES20.glDeleteShader(avatarFragmentShaderPtr);
+        GLES20.glDeleteShader(avatarBlurFragmentShaderPtr);
+        GLES20.glDeleteShader(avatarBlurVertexShaderPtr);
+
+        zoomAndCropProgram.releaseResources();
+        avatarBlurProgram.releaseResources();
     }
 }
