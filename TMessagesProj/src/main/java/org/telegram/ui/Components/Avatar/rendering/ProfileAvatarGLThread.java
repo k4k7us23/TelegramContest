@@ -9,11 +9,17 @@ import android.view.Surface;
 public class ProfileAvatarGLThread extends HandlerThread {
     private final ProfileAvatarEGLHelper profileAvatarEglHelper;
     private final ProfileAvatarRenderer renderer;
+    private final BitmapUtils bitmapUtils = new BitmapUtils();
 
     private final Handler glThreadHandler;
 
     private int width, height;
     private boolean drawScheduled = false;
+
+    private final Object bitmapUpdateLock = new Object();
+    private Bitmap readBitmap = null;
+    private Bitmap writeBitmap = null;
+    private boolean bitmapUpdateScheduled = false;
 
     public ProfileAvatarGLThread(Surface surface, ProfileAvatarRenderer renderer, int w, int h) {
         super("ProfileAvatarGLThread");
@@ -42,7 +48,11 @@ public class ProfileAvatarGLThread extends HandlerThread {
     }
 
     public void updateBitmap(Bitmap bitmap) {
-        glThreadHandler.post(() -> handleUpdateBitmap(bitmap));
+        synchronized (bitmapUpdateLock) {
+            writeBitmap = bitmapUtils.copySaveMemoryIfPossible(bitmap, writeBitmap);
+            bitmapUpdateScheduled = true;
+        }
+        glThreadHandler.post(() -> handleUpdateBitmap());
     }
 
     public void updateZoom(float zoom) {
@@ -90,9 +100,21 @@ public class ProfileAvatarGLThread extends HandlerThread {
         renderer.onSurfaceChanged(width, height);
     }
 
-    private void handleUpdateBitmap(Bitmap bitmap) {
-        renderer.onBitmapUpdate(bitmap);
-        scheduleDraw();
+    private void handleUpdateBitmap() {
+        final boolean bitmapUpdateScheduledLocal;
+        synchronized (bitmapUpdateLock) {
+            bitmapUpdateScheduledLocal = bitmapUpdateScheduled;
+            if (bitmapUpdateScheduled) {
+                Bitmap tmp = readBitmap;
+                readBitmap = writeBitmap;
+                writeBitmap = tmp;
+                bitmapUpdateScheduled = false;
+            }
+        }
+        if (bitmapUpdateScheduledLocal) {
+            renderer.onBitmapUpdate(readBitmap);
+            scheduleDraw();
+        }
     }
 
     private void handleUpdateZoom(float zoom) {
@@ -151,6 +173,7 @@ public class ProfileAvatarGLThread extends HandlerThread {
     }
 
     private void handleRequestStop() {
+        // TODO release renderer resources
         profileAvatarEglHelper.releaseEGL();
         quitSafely();
     }

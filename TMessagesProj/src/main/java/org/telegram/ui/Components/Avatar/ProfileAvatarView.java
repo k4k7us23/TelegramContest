@@ -67,7 +67,6 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
 
     private Integer viewSizeMn = null;
 
-    private Bitmap sentBitmap = null;
     private Bitmap originalBitmap = null;
     private Bitmap scaledBitmap = null;
 
@@ -101,12 +100,9 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     }
 
     private void updateBitmapInternal(Bitmap bitmap) {
-        if (sentBitmap != bitmap) {
-            sentBitmap = bitmap;
-            executeWhenGlThreadIsReady(() -> {
-                profileAvatarGlThread.updateBitmap(bitmap);
-            });
-        }
+        executeWhenGlThreadIsReady(() -> {
+            profileAvatarGlThread.updateBitmap(bitmap);
+        });
     }
 
     public void updateZoom(float zoom) {

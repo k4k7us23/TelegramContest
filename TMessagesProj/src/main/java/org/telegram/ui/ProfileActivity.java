@@ -807,13 +807,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         private ImageReceiver.ImageReceiverDelegate imageReceiverDelegate = new ImageReceiver.ImageReceiverDelegate() {
             @Override
             public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
-                boolean animationDisplayed = imageReceiver.getAnimation() != null;
+                boolean animationDisplayed = isAnimationImageDisplayed(imageReceiver);
                 lastUploadedImageProgress = null;
                 setEnableScaleBitmapOptimization(!animationDisplayed);
                 refreshBitmapInOpenGl();
             }
         };
 
+        private boolean isAnimationImageDisplayed(ImageReceiver imageReceiver) {
+            boolean videoAnimationDisplayed = imageReceiver.getAnimation() != null;
+            boolean vectorDrawableAnimationDisplayed = imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable;
+            return videoAnimationDisplayed || vectorDrawableAnimationDisplayed;
+        }
 
         public ProfileAvatarWrapper(Context context) {
             super(context);
@@ -824,6 +829,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     refreshBitmapInOpenGl();
                 }
             });
+            imageReceiver.setImageCoords(0, 0, 500, 500);
         }
 
         @Override
@@ -843,6 +849,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         private Integer lastUploadedImageProgress = null;
 
+
+        private Bitmap bitmapForVectorAvatarDrawable = null;
+
+        private Bitmap getBitmapForVectorAvatarDrawable() {
+            if (bitmapForVectorAvatarDrawable == null) {
+                bitmapForVectorAvatarDrawable = Bitmap.createBitmap(500, 500, Bitmap.Config.ARGB_8888);
+            }
+            return bitmapForVectorAvatarDrawable;
+        }
+
+        private Bitmap renderReceiverToBitmap() {
+            Bitmap bitmap = getBitmapForVectorAvatarDrawable();
+            Canvas canvas = new Canvas(bitmap);
+            bitmap.eraseColor(Color.TRANSPARENT);
+            imageReceiver.draw(canvas);
+            return bitmap;
+        }
+
         private Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
             @Override
             public void doFrame(long frameTimeNanos) {
@@ -850,6 +874,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 imageReceiver.draw(stubCanvas);
 
                 AnimatedFileDrawable animatedFileDrawable = imageReceiver.getAnimation();
+                // TODO check for VectorAvatarThumbDrawable
                 if (animatedFileDrawable != null) {
                     int progress = animatedFileDrawable.getCurrentProgressMs();
                     if (!Objects.equals(lastUploadedImageProgress, progress)) {
@@ -858,7 +883,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 } else {
                     lastUploadedImageProgress = null;
-                    updateBitmap(imageReceiver.getBitmap());
+                    Bitmap bitmap = imageReceiver.getBitmap();
+                    if (bitmap != null) {
+                        updateBitmap(imageReceiver.getBitmap());
+                    } else {
+                        updateBitmap(renderReceiverToBitmap());
+                    }
                 }
             }
         };
@@ -897,6 +927,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         public void setForegroundImageDrawable(ImageReceiver.BitmapHolder holder) {
+            System.out.println(24);
             // TODO looks like this method is no longer needed. Double check
         }
 
@@ -914,6 +945,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         public void setForegroundImage(ImageLocation imageLocation, String imageFilter, Drawable thumb) {
+            System.out.println(23);
             // TODO looks like this method is no longer needed. Double check
         }
 
