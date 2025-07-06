@@ -71,6 +71,13 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         this.enableScaleBitmapOptimization = enable;
     }
 
+    private float relativeBlurRadius = -1f;
+
+    public void setRelativeBlurRadius(float relativeBlurRadius) {
+        this.relativeBlurRadius = relativeBlurRadius;
+        updateBitmapInternal(getBitmapForRendering());
+    }
+
     public void updateBitmap(Bitmap bitmap) {
         this.originalBitmap = bitmap;
         this.scaledBitmap = null;
@@ -95,7 +102,17 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     }
 
     private void updateBitmapInternal(Bitmap bitmap) {
+        final Float newBlurRadius;
+        if (relativeBlurRadius >= 0f && bitmap != null) {
+            float sizeMn = Math.min(bitmap.getWidth(), bitmap.getHeight());
+            newBlurRadius = (sizeMn * relativeBlurRadius);
+        } else {
+            newBlurRadius = null;
+        }
         executeWhenGlThreadIsReady(() -> {
+            if (newBlurRadius != null) {
+                profileAvatarGlThread.updateBlurRadius(newBlurRadius.intValue());
+            }
             profileAvatarGlThread.updateBitmap(bitmap);
         });
     }
@@ -113,6 +130,7 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     }
 
     public void updateBlurRadius(int blurRadius) {
+        relativeBlurRadius = -1f;
         executeWhenGlThreadIsReady(() -> {
             profileAvatarGlThread.updateBlurRadius(blurRadius);
         });
