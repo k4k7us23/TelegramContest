@@ -94,13 +94,14 @@ public class ProfileAvatarGLThread extends HandlerThread {
         height = h;
         if (!stopping) {
             renderer.onSurfaceChanged(w, h);
+            scheduleDraw();
         }
         scheduleDraw();
     }
 
     private void handleInitDrawing() {
-        profileAvatarEglHelper.initEGL();
         if (!stopping) {
+            profileAvatarEglHelper.initEGL();
             renderer.onSurfaceCreated();
             renderer.onSurfaceChanged(width, height);
         }
@@ -188,12 +189,11 @@ public class ProfileAvatarGLThread extends HandlerThread {
     }
 
     private void handleDrawFrame() {
-        profileAvatarEglHelper.makeCurrent();
-
         if (!stopping) {
+            profileAvatarEglHelper.makeCurrent();
             renderer.onDrawFrame();
+            profileAvatarEglHelper.swapBuffers();
         }
-        profileAvatarEglHelper.swapBuffers();
     }
 
     private void handleRequestStop() {

@@ -7,7 +7,6 @@ import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.TextureView;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.ui.Components.Avatar.rendering.ProfileAvatarGLThread;
 import org.telegram.ui.Components.Avatar.rendering.ProfileAvatarGlErrorChecker;
@@ -38,8 +37,6 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     private ProfileAvatarGLThread profileAvatarGlThread;
     private Queue<Runnable> glThreadActionsQueue = new ArrayDeque<>();
 
-    private final int scaleBitmapHeight = AndroidUtilities.dp(120);
-
     public ProfileAvatarView(Context context) {
         super(context);
         init();
@@ -60,45 +57,30 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         setOpaque(false);
     }
 
-    private Integer viewSizeMn = null;
-
     private Bitmap originalBitmap = null;
-    private Bitmap scaledBitmap = null;
-
-    private boolean enableScaleBitmapOptimization = true;
-
-    public void setEnableScaleBitmapOptimization(boolean enable) {
-        this.enableScaleBitmapOptimization = enable;
-    }
 
     private float relativeBlurRadius = -1f;
 
     public void setRelativeBlurRadius(float relativeBlurRadius) {
         this.relativeBlurRadius = relativeBlurRadius;
-        updateBitmapInternal(getBitmapForRendering());
+        final Float newBlurRadius;
+        if (relativeBlurRadius >= 0f && originalBitmap != null) {
+            float sizeMn = Math.min(originalBitmap.getWidth(), originalBitmap.getHeight());
+            newBlurRadius = (sizeMn * relativeBlurRadius);
+        } else {
+            newBlurRadius = null;
+        }
+        if (newBlurRadius != null) {
+            executeWhenGlThreadIsReady(() -> {
+                profileAvatarGlThread.updateBlurRadius(newBlurRadius.intValue());
+            });
+        }
     }
 
     public void updateBitmap(Bitmap bitmap) {
         this.originalBitmap = bitmap;
-        this.scaledBitmap = null;
-        if (bitmap != null && enableScaleBitmapOptimization) {
-            float ratio = (float) bitmap.getWidth() / (float) bitmap.getHeight();
-            if (scaleBitmapHeight < bitmap.getHeight()) {
-                scaledBitmap = Bitmap.createScaledBitmap(bitmap, (int) (ratio * scaleBitmapHeight), scaleBitmapHeight, true);
-            }
-        }
 
-        updateBitmapInternal(getBitmapForRendering());
-    }
-
-    private Bitmap getBitmapForRendering() {
-        if (viewSizeMn == null) {
-            return originalBitmap;
-        } else if (scaledBitmap != null && viewSizeMn <= scaleBitmapHeight) {
-            return scaledBitmap;
-        } else {
-            return originalBitmap;
-        }
+        updateBitmapInternal(originalBitmap);
     }
 
     private void updateBitmapInternal(Bitmap bitmap) {
@@ -162,7 +144,6 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        viewSizeMn = Math.min(width, height);
         try {
             profileAvatarRendererImpl = new ProfileAvatarRendererImpl(new AvatarProgramFactory(shaderLoader), glErrorChecker);
         } catch (IOException e) {
@@ -172,16 +153,13 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         while (!glThreadActionsQueue.isEmpty()) {
             glThreadActionsQueue.poll().run();
         }
-        updateBitmapInternal(getBitmapForRendering());
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        viewSizeMn = Math.min(width, height);
         if (profileAvatarGlThread != null) {
             profileAvatarGlThread.onSurfaceChanged(width, height);
         }
-        updateBitmapInternal(getBitmapForRendering());
     }
 
     @Override

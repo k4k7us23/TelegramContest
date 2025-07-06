@@ -7,7 +7,6 @@ import android.view.Choreographer;
 
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.ui.Components.AnimatedFileDrawable;
-import org.telegram.ui.Components.VectorAvatarThumbDrawable;
 
 import java.util.Objects;
 
@@ -27,9 +26,7 @@ public class ProfileAvatarViewImageReceiverAdapter {
     private ImageReceiver.ImageReceiverDelegate imageReceiverDelegate = new ImageReceiver.ImageReceiverDelegate() {
         @Override
         public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
-            boolean animationDisplayed = isAnimationImageDisplayed(imageReceiver);
             lastUploadedImageProgress = null;
-            profileAvatarView.setEnableScaleBitmapOptimization(!animationDisplayed);
             refreshBitmapInOpenGl();
         }
     };
@@ -46,13 +43,6 @@ public class ProfileAvatarViewImageReceiverAdapter {
             }
         });
         imageReceiver.setImageCoords(0, 0, VECTOR_ANIMATED_DRAWABLE_RENDER_WIDTH, VECTOR_ANIMATED_DRAWABLE_RENDER_HEIGHT);
-    }
-
-
-    private boolean isAnimationImageDisplayed(ImageReceiver imageReceiver) {
-        boolean videoAnimationDisplayed = imageReceiver.getAnimation() != null;
-        boolean vectorDrawableAnimationDisplayed = imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable;
-        return videoAnimationDisplayed || vectorDrawableAnimationDisplayed;
     }
 
     private Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
