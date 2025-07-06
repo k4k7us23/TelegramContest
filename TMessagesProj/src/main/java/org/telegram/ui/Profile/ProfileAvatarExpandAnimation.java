@@ -8,6 +8,9 @@ import org.telegram.ui.ActionBar.SimpleTextView;
 
 public class ProfileAvatarExpandAnimation {
 
+    public static final float VERTICAL_BLUR_LIMIT_END = 0.16627f;
+    public static final float VERTICAL_BLUR_BORDER_SIZE_END = VERTICAL_BLUR_LIMIT_END;
+    public static final float RELATIVE_BLUR_END = 0.2f;
 
     private final View avatarContainer2;
     private final SimpleTextView[] nameTextView;
@@ -61,7 +64,7 @@ public class ProfileAvatarExpandAnimation {
 
     public float getVerticalBlurLimit(float expandProgress) {
         float progress = getVerticalBlurProgress(expandProgress);
-        return progress * 0.16627f;
+        return progress * VERTICAL_BLUR_LIMIT_END;
     }
 
     public float getVerticalBlurBorderSize(float expandProgress) {
@@ -69,7 +72,7 @@ public class ProfileAvatarExpandAnimation {
     }
 
     public float getRelativeBlurRadius() {
-        return 0.2f;
+        return RELATIVE_BLUR_END;
     }
 
     public float getNameTranslationX(float expandProgress) {

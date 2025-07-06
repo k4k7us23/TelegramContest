@@ -214,6 +214,7 @@ import org.telegram.ui.Components.AnimationProperties;
 import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.AutoDeletePopupWrapper;
 import org.telegram.ui.Components.Avatar.IAvatarView;
+import org.telegram.ui.Components.Avatar.ImageReceiverProvider;
 import org.telegram.ui.Components.Avatar.ProfileAvatarView;
 import org.telegram.ui.Components.Avatar.ProfileAvatarViewImageReceiverAdapter;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -5211,6 +5212,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 checkPhotoDescriptionAlpha();
             }
         };
+        avatarsViewPager.setOffscreenPageLimit(1);
         if (userId != getUserConfig().clientUserId && userInfo != null) {
             customAvatarProgress = userInfo.profile_photo == null ? 0 : 1;
         }
@@ -7677,7 +7679,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 overlaysView.setOverlaysVisible(true, durationFactor);
                 avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
                 avatarsViewPager.setCreateThumbFromParent(true);
-                avatarsViewPager.getAdapter().notifyDataSetChanged();
                 expandAnimator.cancel();
                 float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
                 expandAnimatorValues[0] = value;
@@ -7763,22 +7764,22 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
 
-                if (!doNotSetForeground) {
-                    BackupImageView imageView = avatarsViewPager.getCurrentItemView();
-                    if (imageView != null) {
-                        if (imageView.getImageReceiver().getDrawable() instanceof VectorAvatarThumbDrawable) {
-                            avatarImage.drawForeground(false);
-                        } else {
-                            avatarImage.drawForeground(true);
-                            avatarImage.setForegroundImageDrawable(imageView.getImageReceiver().getDrawableSafe());
-                        }
-                    }
+        if (!doNotSetForeground) {
+            ImageReceiverProvider imageView = avatarsViewPager.getCurrentItemView();
+            if (imageView != null) {
+                if (imageView.getImageReceiver().getDrawable() instanceof VectorAvatarThumbDrawable) {
+                    avatarImage.drawForeground(false);
+                } else {
+                    avatarImage.drawForeground(true);
+                    avatarImage.setForegroundImageDrawable(imageView.getImageReceiver().getDrawableSafe());
                 }
-                avatarImage.setForegroundAlpha(1f);
-                avatarContainer.setVisibility(View.VISIBLE);
-                avatarsViewPager.setVisibility(View.GONE);
-                expandAnimator.start();
             }
+        }
+        avatarImage.setForegroundAlpha(1f);
+        avatarContainer.setVisibility(View.VISIBLE);
+        avatarsViewPager.setVisibility(View.GONE);
+        expandAnimator.start();
+    }
 
             if (expandAnimator == null || !expandAnimator.isRunning()) {
                 float avatarTranslationY = profileAvatarPullDownAnimation.getAvatarTranslationY(expandProgress);

@@ -7,9 +7,7 @@ import org.telegram.messenger.ImageReceiver;
 /**
  * Common interface for ProfileActivity.ProfileAvatarContainer and  ProfileActivity.AvatarImageView
  */
-public interface IAvatarView {
-
-    ImageReceiver getImageReceiver();
+public interface IAvatarView extends ImageReceiverProvider{
 
     View getRootView();
 

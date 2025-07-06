@@ -96,7 +96,6 @@ public class ProfileAvatarGLThread extends HandlerThread {
             renderer.onSurfaceChanged(w, h);
             scheduleDraw();
         }
-        scheduleDraw();
     }
 
     private void handleInitDrawing() {
