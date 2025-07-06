@@ -215,6 +215,7 @@ import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.AutoDeletePopupWrapper;
 import org.telegram.ui.Components.Avatar.IAvatarView;
 import org.telegram.ui.Components.Avatar.ProfileAvatarView;
+import org.telegram.ui.Components.Avatar.ProfileAvatarViewImageReceiverAdapter;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackButtonMenu;
 import org.telegram.ui.Components.BackupImageView;
@@ -811,34 +812,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public static class ProfileAvatarWrapper extends ProfileAvatarView implements IAvatarView {
         private float foregroundAlpha;
         private ImageReceiver imageReceiver = new ImageReceiver(this);
+        private ProfileAvatarViewImageReceiverAdapter imageReceiverAdapter = new ProfileAvatarViewImageReceiverAdapter(this, imageReceiver);
         private ProfileGalleryView avatarsViewPager;
-
-        private ImageReceiver.ImageReceiverDelegate imageReceiverDelegate = new ImageReceiver.ImageReceiverDelegate() {
-            @Override
-            public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
-                boolean animationDisplayed = isAnimationImageDisplayed(imageReceiver);
-                lastUploadedImageProgress = null;
-                setEnableScaleBitmapOptimization(!animationDisplayed);
-                refreshBitmapInOpenGl();
-            }
-        };
-
-        private boolean isAnimationImageDisplayed(ImageReceiver imageReceiver) {
-            boolean videoAnimationDisplayed = imageReceiver.getAnimation() != null;
-            boolean vectorDrawableAnimationDisplayed = imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable;
-            return videoAnimationDisplayed || vectorDrawableAnimationDisplayed;
-        }
 
         public ProfileAvatarWrapper(Context context) {
             super(context);
-            imageReceiver.setDelegate(imageReceiverDelegate);
-            imageReceiver.addInvalidateListener(new ImageReceiver.InvalidateListener() {
-                @Override
-                public void onInvalidate() {
-                    refreshBitmapInOpenGl();
-                }
-            });
-            imageReceiver.setImageCoords(0, 0, 500, 500);
         }
 
         @Override
@@ -851,62 +829,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
             imageReceiver.onDetachedFromWindow();
-        }
-
-        private boolean refreshScheduled = false;
-        private Canvas stubCanvas = new Canvas();
-
-        private Integer lastUploadedImageProgress = null;
-
-
-        private Bitmap bitmapForVectorAvatarDrawable = null;
-
-        private Bitmap getBitmapForVectorAvatarDrawable() {
-            if (bitmapForVectorAvatarDrawable == null) {
-                bitmapForVectorAvatarDrawable = Bitmap.createBitmap(500, 500, Bitmap.Config.ARGB_8888);
-            }
-            return bitmapForVectorAvatarDrawable;
-        }
-
-        private Bitmap renderReceiverToBitmap() {
-            Bitmap bitmap = getBitmapForVectorAvatarDrawable();
-            Canvas canvas = new Canvas(bitmap);
-            bitmap.eraseColor(Color.TRANSPARENT);
-            imageReceiver.draw(canvas);
-            return bitmap;
-        }
-
-        private Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
-            @Override
-            public void doFrame(long frameTimeNanos) {
-                refreshScheduled = false;
-                imageReceiver.draw(stubCanvas);
-
-                AnimatedFileDrawable animatedFileDrawable = imageReceiver.getAnimation();
-                // TODO check for VectorAvatarThumbDrawable
-                if (animatedFileDrawable != null) {
-                    int progress = animatedFileDrawable.getCurrentProgressMs();
-                    if (!Objects.equals(lastUploadedImageProgress, progress)) {
-                        updateBitmap(imageReceiver.getBitmap());
-                        lastUploadedImageProgress = progress;
-                    }
-                } else {
-                    lastUploadedImageProgress = null;
-                    Bitmap bitmap = imageReceiver.getBitmap();
-                    if (bitmap != null) {
-                        updateBitmap(imageReceiver.getBitmap());
-                    } else {
-                        updateBitmap(renderReceiverToBitmap());
-                    }
-                }
-            }
-        };
-
-        private void refreshBitmapInOpenGl() {
-            if (!refreshScheduled) {
-                refreshScheduled = true;
-                Choreographer.getInstance().postFrameCallback(frameCallback);
-            }
         }
 
         // TODO maybe this variable is not needed
