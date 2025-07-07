@@ -25,4 +25,6 @@ public interface ProfileAvatarRenderer {
     void onVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize);
 
     void onBlackOverlayAlphaUpdate(float blackOverlayAlpha);
+
+    void releaseResources();
 }

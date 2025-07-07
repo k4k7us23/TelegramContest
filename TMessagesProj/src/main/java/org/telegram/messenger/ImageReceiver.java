@@ -35,6 +35,7 @@ import androidx.annotation.Keep;
 
 import com.google.android.exoplayer2.util.Log;
 
+import org.checkerframework.checker.units.qual.A;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.AnimatedFileDrawable;
@@ -58,6 +59,7 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
     private boolean allowCrossfadeWithImage = true;
     private boolean allowDrawWhileCacheGenerating;
     private ArrayList<Decorator> decorators;
+    private ArrayList<InvalidateListener> invalidateListeners;
 
     public boolean updateThumbShaderMatrix() {
         if (currentThumbDrawable != null && thumbShader != null) {
@@ -102,6 +104,10 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         default void didSetImageBitmap(int type, String key, Drawable drawable) {
 
         }
+    }
+
+    public interface InvalidateListener {
+        void onInvalidate();
     }
 
     public static class BitmapHolder {
@@ -2276,6 +2282,11 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         } else {
             parentView.invalidate((int) imageX, (int) imageY, (int) (imageX + imageW), (int) (imageY + imageH));
         }
+        if (invalidateListeners != null) {
+            for (InvalidateListener invalidateListener : invalidateListeners) {
+                invalidateListener.onInvalidate();
+            }
+        }
     }
 
     public void getParentPosition(int[] position) {
@@ -3284,6 +3295,13 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         if (attachedToWindow) {
             decorator.onAttachedToWindow(this);
         }
+    }
+
+    public void addInvalidateListener(InvalidateListener invalidateListener) {
+        if (invalidateListeners == null) {
+            invalidateListeners = new ArrayList<>();
+        }
+        invalidateListeners.add(invalidateListener);
     }
 
     public static class BackgroundThreadDrawHolder {

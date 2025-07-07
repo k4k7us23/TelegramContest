@@ -18,4 +18,8 @@ public class AvatarBlurProgram {
         vertexShader = new AvatarBlurVertexShader(glProgram);
         blurFragmentShader = new AvatarBlurFragmentShader(glProgram);
     }
+
+    void releaseResources() {
+        GLES20.glDeleteProgram(glProgram);
+    }
 }

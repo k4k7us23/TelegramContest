@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.SparseArray;
@@ -18,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,7 +38,12 @@ import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.Components.Avatar.IAvatarView;
+import org.telegram.ui.Components.Avatar.ImageReceiverProvider;
+import org.telegram.ui.Components.Avatar.ProfileAvatarView;
+import org.telegram.ui.Components.Avatar.ProfileAvatarViewImageReceiverAdapter;
 import org.telegram.ui.PinchToZoomHelper;
+import org.telegram.ui.Profile.ProfileAvatarExpandAnimation;
 import org.telegram.ui.ProfileActivity;
 
 import java.util.ArrayList;
@@ -159,7 +166,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                     if (hasActiveVideo) {
                         position--;
                     }
-                    BackupImageView currentView = getCurrentItemView();
+                    ImageReceiverProvider currentView = getCurrentItemView();
                     int count = getChildCount();
 
                     for (int a = 0; a < count; a++) {
@@ -265,7 +272,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         imagesLayerNum = value;
     }
 
-    public ProfileGalleryView(Context context, long dialogId, ActionBar parentActionBar, RecyclerListView parentListView, ProfileActivity.AvatarImageView parentAvatarImageView, int parentClassGuid, Callback callback) {
+    public ProfileGalleryView(Context context, long dialogId, ActionBar parentActionBar, RecyclerListView parentListView, IAvatarView parentAvatarImageView, int parentClassGuid, Callback callback) {
         super(context);
         setVisibility(View.GONE);
         setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -286,15 +293,15 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                 checkCustomAvatar(position, positionOffset);
                 if (positionOffsetPixels == 0) {
                     position = adapter.getRealPosition(position);
-                    BackupImageView currentView = getCurrentItemView();
+                    ImageReceiverProvider currentView = getCurrentItemView();
                     int count = getChildCount();
                     for (int a = 0; a < count; a++) {
                         View child = getChildAt(a);
-                        if (!(child instanceof BackupImageView)) {
+                        if (!(child instanceof ImageReceiverProvider)) {
                             continue;
                         }
                         int p = adapter.getRealPosition(adapter.imageViews.indexOf(child));
-                        BackupImageView imageView = (BackupImageView) child;
+                        ImageReceiverProvider imageView = (ImageReceiverProvider) child;
                         ImageReceiver imageReceiver = imageView.getImageReceiver();
                         boolean currentAllow = imageReceiver.getAllowStartAnimation();
                         if (p >= 0 && p < videoLocations.size()) {
@@ -628,7 +635,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         return !imagesLocations.isEmpty();
     }
 
-    public BackupImageView getCurrentItemView() {
+    public ImageReceiverProvider getCurrentItemView() {
         if (adapter != null && !adapter.objects.isEmpty()) {
             return adapter.objects.get(getCurrentItem()).imageView;
         } else {
@@ -640,7 +647,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         if (videoLocations.get(hasActiveVideo ? getRealPosition() - 1 : getRealPosition()) == null) {
             return false;
         }
-        BackupImageView imageView = getCurrentItemView();
+        ImageReceiverProvider imageView = getCurrentItemView();
         if (imageView == null) {
             return false;
         }
@@ -649,7 +656,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
     }
 
     public float getCurrentItemProgress() {
-        BackupImageView imageView = getCurrentItemView();
+        ImageReceiverProvider imageView = getCurrentItemView();
         if (imageView == null) {
             return 0.0f;
         }
@@ -1083,14 +1090,14 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
     public class ViewPagerAdapter extends Adapter {
 
         private final ArrayList<Item> objects = new ArrayList<>();
-        private final ArrayList<BackupImageView> imageViews = new ArrayList<>();
+        private final ArrayList<AvatarImageView> imageViews = new ArrayList<>();
 
         private final Context context;
         private final Paint placeholderPaint;
-        private BackupImageView parentAvatarImageView;
+        private IAvatarView parentAvatarImageView;
         private final ActionBar parentActionBar;
 
-        public ViewPagerAdapter(Context context, ProfileActivity.AvatarImageView parentAvatarImageView, ActionBar parentActionBar) {
+        public ViewPagerAdapter(Context context, IAvatarView parentAvatarImageView, ActionBar parentActionBar) {
             this.context = context;
             this.parentAvatarImageView = parentAvatarImageView;
             this.parentActionBar = parentActionBar;
@@ -1155,7 +1162,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                 Drawable drawable = parentAvatarImageView == null ? null : parentAvatarImageView.getImageReceiver().getDrawable();
                 if (drawable instanceof AnimatedFileDrawable && ((AnimatedFileDrawable) drawable).hasBitmap()) {
                     AnimatedFileDrawable animatedFileDrawable = (AnimatedFileDrawable) drawable;
-                    item.imageView.setImageDrawable(drawable);
+                    item.imageView.getImageReceiver().setImageBitmap(drawable);
                     animatedFileDrawable.addSecondParentView(item.imageView);
                     animatedFileDrawable.setInvalidateParentViewWithSecond(true);
                 } else if (imageLocationPosition >= 0 && imageLocationPosition < videoLocations.size()) {
@@ -1220,7 +1227,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
             });
             item.imageView.getImageReceiver().setCrossfadeAlpha((byte) 2);
 
-            item.imageView.setRoundRadius(roundTopRadius, roundTopRadius, roundBottomRadius, roundBottomRadius);
+            //item.imageView.setRoundRadius(roundTopRadius, roundTopRadius, roundBottomRadius, roundBottomRadius);
             item.imageView.setTag(realPosition);
             return item;
         }
@@ -1234,15 +1241,15 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
             if (item.isActiveVideo) {
                 return;
             }
-            BackupImageView imageView = item.imageView;
+            ImageReceiverProvider imageView = item.imageView;
             if (imageView.getImageReceiver().hasStaticThumb()) {
                 Drawable drawable = imageView.getImageReceiver().getDrawable();
                 if (drawable instanceof AnimatedFileDrawable) {
-                    ((AnimatedFileDrawable) drawable).removeSecondParentView(imageView);
+                    //((AnimatedFileDrawable) drawable).removeSecondParentView(imageView);
                 }
             }
-            imageView.setRoundRadius(0);
-            container.removeView(imageView);
+            //imageView.setRoundRadius(0);
+            //container.removeView(imageView);
             imageView.getImageReceiver().cancelLoadImage();
         }
 
@@ -1328,13 +1335,13 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         if (adapter != null) {
             for (int i = 0; i < adapter.objects.size(); i++) {
                 if (adapter.objects.get(i).imageView != null) {
-                    adapter.objects.get(i).imageView.setRoundRadius(roundTopRadius, roundTopRadius, roundBottomRadius, roundBottomRadius);
+                    //adapter.objects.get(i).imageView.setRoundRadius(roundTopRadius, roundTopRadius, roundBottomRadius, roundBottomRadius);
                 }
             }
         }
     }
 
-    public void setParentAvatarImage(BackupImageView parentImageView) {
+    public void setParentAvatarImage(IAvatarView parentImageView) {
         if (adapter != null) {
             adapter.parentAvatarImageView = parentImageView;
         }
@@ -1362,7 +1369,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         this.createThumbFromParent = createThumbFromParent;
     }
 
-    private class AvatarImageView extends BackupImageView {
+    private class AvatarImageView extends FrameLayout implements ImageReceiverProvider{
 
         private final int radialProgressSize = AndroidUtilities.dp(64f);
 
@@ -1373,12 +1380,38 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         public boolean isVideo;
         private final int position;
         private final Paint placeholderPaint;
+        private final ImageReceiver imageReceiver = new ImageReceiver(this);
+
+        private final ProfileAvatarView profileAvatarView;
+
+        private final ProfileAvatarViewImageReceiverAdapter imageReceiverAdapter;
+
 
         public AvatarImageView(Context context, int position, Paint placeholderPaint) {
             super(context);
             this.position = position;
             this.placeholderPaint = placeholderPaint;
-            setLayerNum(imagesLayerNum);
+            setWillNotDraw(false);
+            this.profileAvatarView = new ProfileAvatarView(context);
+            addView(profileAvatarView, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            imageReceiverAdapter = new ProfileAvatarViewImageReceiverAdapter(profileAvatarView, imageReceiver);
+
+            profileAvatarView.setRelativeBlurRadius(ProfileAvatarExpandAnimation.RELATIVE_BLUR_END);
+            profileAvatarView.updateVerticalBlurLimit(ProfileAvatarExpandAnimation.VERTICAL_BLUR_LIMIT_END);
+            profileAvatarView.updateVerticalBlurLimitBorderSize(ProfileAvatarExpandAnimation.VERTICAL_BLUR_BORDER_SIZE_END);
+           // setLayerNum(imagesLayerNum); todo invalidate this
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            imageReceiver.onAttachedToWindow();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            imageReceiver.onDetachedFromWindow();
         }
 
         @Override
@@ -1479,6 +1512,27 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
             super.invalidate();
             if (invalidateWithParent) {
                 ProfileGalleryView.this.invalidate();
+            }
+        }
+
+        @Override
+        public ImageReceiver getImageReceiver() {
+            return imageReceiver;
+        }
+
+        public void setImageMedia(ImageLocation mediaLocation, String mediaFilter, ImageLocation imageLocation, String imageFilter, Bitmap thumbBitmap, int size, int cacheType, Object parentObject) {
+            Drawable thumb = null;
+            if (thumbBitmap != null) {
+                thumb = new BitmapDrawable(null, thumbBitmap);
+            }
+            imageReceiver.setImage(mediaLocation, mediaFilter, imageLocation, imageFilter, null, null, thumb, size, null, parentObject, cacheType);
+        }
+
+        public void setImageMedia(VectorAvatarThumbDrawable vectorAvatar, ImageLocation mediaLocation, String mediaFilter, ImageLocation imageLocation, String imageFilter, ImageLocation thumbLocation, String thumbFilter, String ext, int size, int cacheType, Object parentObject) {
+            if (vectorAvatar != null) {
+                imageReceiver.setImageBitmap(vectorAvatar);
+            } else {
+                imageReceiver.setImage(mediaLocation, mediaFilter, imageLocation, imageFilter, thumbLocation, thumbFilter, null, size, ext, parentObject, cacheType);
             }
         }
     }

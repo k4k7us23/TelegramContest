@@ -5021,6 +5021,10 @@ public class AndroidUtilities {
         return (a ? 1.0f : 0.0f) + f * ((b ? 1.0f : 0.0f) - (a ? 1.0f : 0.0f));
     }
 
+    public static float coerceIn(float value, float left, float right) {
+        return Math.max(left, Math.min(right, value));
+    }
+
     public static double lerp(double a, double b, float f) {
         return a + f * (b - a);
     }

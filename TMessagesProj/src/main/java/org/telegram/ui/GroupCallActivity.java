@@ -8240,7 +8240,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         if (imageLocation == null && !hasAttachedRenderer) {
             showWithAvatarPreview = false;
         } else if (showWithAvatarPreview) {
-            avatarsViewPager.setParentAvatarImage(scrimView.getAvatarImageView());
+            avatarsViewPager.setParentAvatarImage(scrimView.getAvatarImageViewAsAvatarView());
             avatarsViewPager.setHasActiveVideo(hasAttachedRenderer);
             avatarsViewPager.setData(peerId, true);
             avatarsViewPager.setCreateThumbFromParent(true);

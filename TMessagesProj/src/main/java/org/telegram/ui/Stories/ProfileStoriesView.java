@@ -7,7 +7,6 @@ import static org.telegram.messenger.Utilities.clamp;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -32,7 +31,6 @@ import com.google.zxing.common.detector.MathUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
@@ -67,7 +65,7 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
     private final long dialogId;
     private final boolean isTopic;
     private final View avatarContainer;
-    private final ProfileActivity.AvatarImageView avatarImage;
+    private final ProfileActivity.ProfileAvatarWrapper avatarImage;
 
     private final AnimatedTextView.AnimatedTextDrawable titleDrawable = new AnimatedTextView.AnimatedTextDrawable(false, true, true);
 
@@ -142,7 +140,7 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
 
     StoriesController storiesController;
 
-    public ProfileStoriesView(Context context, int currentAccount, long dialogId, boolean isTopic, @NonNull View avatarContainer, ProfileActivity.AvatarImageView avatarImage, Theme.ResourcesProvider resourcesProvider) {
+    public ProfileStoriesView(Context context, int currentAccount, long dialogId, boolean isTopic, @NonNull View avatarContainer, ProfileActivity.ProfileAvatarWrapper avatarImage, Theme.ResourcesProvider resourcesProvider) {
         super(context);
 
         this.currentAccount = currentAccount;
@@ -568,7 +566,7 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
             radialProgress.setPaint(unreadPaint);
             radialProgress.setProgressRect((int) rect2.left, (int) rect2.top, (int) rect2.right, (int) rect2.bottom);
             radialProgress.setProgress(Utilities.clamp(uploadingProgress, 1f, 0), true);
-            if (avatarImage.drawAvatar) {
+            if (avatarImage.isDrawAvatar()) {
                 radialProgress.draw(canvas);
             }
             progressWasDrawn = true;
@@ -577,7 +575,6 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
             if (oldIsDone != progressIsDone) {
                 segmentsCountAnimated.set(count, true);
                 segmentsUnreadCountAnimated.set(unreadCount, true);
-                animateBounce();
             }
         } else {
             progressWasDrawn = false;
@@ -764,35 +761,6 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
         }
 
         canvas.restore();
-    }
-
-    private void animateBounce() {
-        AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator inAnimator = ValueAnimator.ofFloat(1, 1.05f);
-        inAnimator.setDuration(100);
-        inAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT);
-
-        ValueAnimator outAnimator = ValueAnimator.ofFloat(1.05f, 1f);
-        outAnimator.setDuration(250);
-        outAnimator.setInterpolator(new OvershootInterpolator());
-
-        ValueAnimator.AnimatorUpdateListener updater = animation -> {
-            avatarImage.bounceScale = bounceScale = (float) animation.getAnimatedValue();
-            avatarImage.invalidate();
-            invalidate();
-        };
-        inAnimator.addUpdateListener(updater);
-        outAnimator.addUpdateListener(updater);
-        animatorSet.playSequentially(inAnimator, outAnimator);
-        animatorSet.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                avatarImage.bounceScale = bounceScale = 1f;
-                avatarImage.invalidate();
-                invalidate();
-            }
-        });
-        animatorSet.start();
     }
 
     private void clipCircle(Canvas canvas, StoryCircle circle, StoryCircle nextCircle) {

@@ -46,6 +46,7 @@ import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.ColoredImageSpan;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.LetterDrawable;
+import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.TopicsFragment;
 
 import java.util.ArrayList;
@@ -115,6 +116,26 @@ public class ForumUtilities {
         } else {
             backupImageView.setAnimatedEmojiDrawable(null);
             backupImageView.setImageDrawable(createTopicDrawable(forumTopic, false));
+        }
+    }
+
+    public static void setTopicIcon(ProfileActivity.ProfileAvatarWrapper avatarWrapper, TLRPC.TL_forumTopic forumTopic, boolean actionBar, boolean largeIcon, Theme.ResourcesProvider resourcesProvider) {
+        if (forumTopic == null || avatarWrapper == null) {
+            return;
+        }
+        if (forumTopic.id == 1) {
+            avatarWrapper.setAnimatedEmojiDrawable(null);
+            avatarWrapper.setImageDrawable(createGeneralTopicDrawable(avatarWrapper.getContext(), 0.75f, Theme.getColor(Theme.key_actionBarDefaultIcon, resourcesProvider), false, largeIcon));
+        } else if (forumTopic.icon_emoji_id != 0) {
+            avatarWrapper.setImageDrawable(null);
+            if (avatarWrapper.getAnimatedEmojiDrawable() == null || forumTopic.icon_emoji_id != avatarWrapper.getAnimatedEmojiDrawable().getDocumentId()) {
+                AnimatedEmojiDrawable drawable = new AnimatedEmojiDrawable(largeIcon ? AnimatedEmojiDrawable.CACHE_TYPE_FORUM_TOPIC_LARGE : AnimatedEmojiDrawable.CACHE_TYPE_FORUM_TOPIC, UserConfig.selectedAccount, forumTopic.icon_emoji_id);
+                drawable.setColorFilter(actionBar ? new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultTitle), PorterDuff.Mode.SRC_IN) : Theme.getAnimatedEmojiColorFilter(resourcesProvider));
+                avatarWrapper.setAnimatedEmojiDrawable(drawable);
+            }
+        } else {
+            avatarWrapper.setAnimatedEmojiDrawable(null);
+            avatarWrapper.setImageDrawable(createTopicDrawable(forumTopic, false));
         }
     }
 
