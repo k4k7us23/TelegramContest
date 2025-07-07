@@ -52,7 +52,6 @@ public class ProfileAvatarViewImageReceiverAdapter {
             imageReceiver.draw(stubCanvas);
 
             AnimatedFileDrawable animatedFileDrawable = imageReceiver.getAnimation();
-            // TODO check for VectorAvatarThumbDrawable
             if (animatedFileDrawable != null) {
                 int progress = animatedFileDrawable.getCurrentProgressMs();
                 if (!Objects.equals(lastUploadedImageProgress, progress)) {
