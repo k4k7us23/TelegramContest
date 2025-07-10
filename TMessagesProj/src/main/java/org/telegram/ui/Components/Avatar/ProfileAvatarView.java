@@ -62,6 +62,16 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
 
     private float relativeBlurRadius = NO_RELATIVE_BLUR_RADIUS;
 
+    // region: state for send
+    private Integer stateBlurRadius = null;
+    private Float stateZoom = null;
+    private Float stateCornerRadius = null;
+    private Float stateVerticalBlurLimit = null;
+    private Float stateVerticalBlurBorderSize = null;
+    private Float stateVerticalBlurAlpha = null;
+    private Float stateBlackOverlayAlpha = null;
+    // endregion
+
     public void setRelativeBlurRadius(float relativeBlurRadius) {
         this.relativeBlurRadius = relativeBlurRadius;
         final Float newBlurRadius;
@@ -73,7 +83,8 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         }
         if (newBlurRadius != null) {
             executeWhenGlThreadIsReady(() -> {
-                profileAvatarGlThread.updateBlurRadius(Math.max(DEFAULT_BLUR_RADIUS, newBlurRadius.intValue()));
+                stateBlurRadius = Math.max(DEFAULT_BLUR_RADIUS, newBlurRadius.intValue());
+                profileAvatarGlThread.updateBlurRadius(stateBlurRadius);
             });
         }
     }
@@ -99,7 +110,8 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         }
         executeWhenGlThreadIsReady(() -> {
             if (newBlurRadius != null) {
-                profileAvatarGlThread.updateBlurRadius(Math.max(DEFAULT_BLUR_RADIUS, newBlurRadius.intValue()));
+                stateBlurRadius = Math.max(DEFAULT_BLUR_RADIUS, newBlurRadius.intValue());
+                profileAvatarGlThread.updateBlurRadius(stateBlurRadius);
             }
             profileAvatarGlThread.updateBitmap(bitmap);
         });
@@ -107,57 +119,105 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
 
     public void updateZoom(float zoom) {
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateZoom(zoom);
+            this.stateZoom = zoom;
+            profileAvatarGlThread.updateZoom(this.stateZoom);
         });
     }
 
     public void updateCornerRadius(float cornerRadius) {
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateCornerRadius(cornerRadius);
+            this.stateCornerRadius = cornerRadius;
+            profileAvatarGlThread.updateCornerRadius(this.stateCornerRadius);
         });
     }
 
     public void updateBlurRadius(int blurRadius) {
         relativeBlurRadius = -1f;
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateBlurRadius(blurRadius);
+            this.stateBlurRadius = blurRadius;
+            profileAvatarGlThread.updateBlurRadius(this.stateBlurRadius);
         });
     }
 
     public void updateVerticalBlurLimit(float verticalBlurLimit) {
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateVerticalBlurLimit(verticalBlurLimit);
+            this.stateVerticalBlurLimit = verticalBlurLimit;
+            profileAvatarGlThread.updateVerticalBlurLimit(this.stateVerticalBlurLimit);
         });
     }
 
     public void updateBlurAlpha(float blurAlpha) {
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateBlurAlpha(blurAlpha);
+            this.stateVerticalBlurAlpha = blurAlpha;
+            profileAvatarGlThread.updateBlurAlpha(this.stateVerticalBlurAlpha);
         });
     }
 
     public void updateVerticalBlurLimitBorderSize(float verticalBlurLimitBorderSize) {
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateVerticalBlurLimitBorderSize(verticalBlurLimitBorderSize);
+            this.stateVerticalBlurBorderSize = verticalBlurLimitBorderSize;
+            profileAvatarGlThread.updateVerticalBlurLimitBorderSize(this.stateVerticalBlurBorderSize);
         });
     }
 
     public void updateBlackOverlayAlpha(float overlayAlpha) {
         executeWhenGlThreadIsReady(() -> {
-            profileAvatarGlThread.updateBlackOverlayAlpha(overlayAlpha);
+            this.stateBlackOverlayAlpha = overlayAlpha;
+            profileAvatarGlThread.updateBlackOverlayAlpha(this.stateBlackOverlayAlpha);
         });
+    }
+
+    private void sendExistingStateToNewThread() {
+        if (profileAvatarGlThread == null) {
+            return;
+        }
+        if (originalBitmap != null) {
+            updateBitmapInternal(originalBitmap);
+        }
+
+        if (stateBlurRadius != null) {
+            profileAvatarGlThread.updateBlurRadius(stateBlurRadius);
+        }
+
+        if (stateZoom != null) {
+            profileAvatarGlThread.updateZoom(stateZoom);
+        }
+
+        if (stateCornerRadius != null) {
+            profileAvatarGlThread.updateCornerRadius(stateCornerRadius);
+        }
+
+        if (stateVerticalBlurLimit != null) {
+            profileAvatarGlThread.updateVerticalBlurLimit(stateVerticalBlurLimit);
+        }
+
+        if (stateVerticalBlurBorderSize != null) {
+            profileAvatarGlThread.updateVerticalBlurLimitBorderSize(stateVerticalBlurBorderSize);
+        }
+
+        if (stateBlackOverlayAlpha != null) {
+            profileAvatarGlThread.updateBlackOverlayAlpha(stateBlackOverlayAlpha);
+        }
+
+        if (stateVerticalBlurAlpha != null) {
+            profileAvatarGlThread.updateBlurAlpha(stateVerticalBlurAlpha);
+        }
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
         try {
             profileAvatarRendererImpl = new ProfileAvatarRendererImpl(new AvatarProgramFactory(shaderLoader), glErrorChecker);
+
+            profileAvatarGlThread = new ProfileAvatarGLThread(new Surface(surfaceTexture), profileAvatarRendererImpl, width, height);
+
+            sendExistingStateToNewThread();
+
+            while (!glThreadActionsQueue.isEmpty()) {
+                glThreadActionsQueue.poll().run();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-        profileAvatarGlThread = new ProfileAvatarGLThread(new Surface(surfaceTexture), profileAvatarRendererImpl, width, height);
-        while (!glThreadActionsQueue.isEmpty()) {
-            glThreadActionsQueue.poll().run();
         }
     }
 
