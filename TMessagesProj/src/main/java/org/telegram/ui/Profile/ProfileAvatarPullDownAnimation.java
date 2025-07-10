@@ -27,7 +27,7 @@ public class ProfileAvatarPullDownAnimation {
      * @param pullDownProgress from 0.0 to ProfileActivity.AVATAR_EXPAND_PROGRESS_THRESHOLD
      */
     public float getAvatarTranslationY(float pullDownProgress) {
-        return AndroidUtilities.dp(AVATAR_MOVE_DOWN_DP) * getMoveDownProgress(pullDownProgress) + profileAvatarInitialAnimation.getAvatarTranslationYInitial(1f);
+        return AndroidUtilities.dp(AVATAR_MOVE_DOWN_DP) * getMoveDownProgress(pullDownProgress) + profileAvatarInitialAnimation.getAvatarTranslationY(1f);
     }
 
     public float getNameTranslationY(float pullDownProgress) {

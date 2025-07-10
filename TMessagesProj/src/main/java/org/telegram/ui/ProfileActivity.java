@@ -79,7 +79,6 @@ import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
-import android.view.Choreographer;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -272,6 +271,7 @@ import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.VectorAvatarThumbDrawable;
 import org.telegram.ui.Components.voip.VoIPHelper;
 import org.telegram.ui.Gifts.GiftSheet;
+import org.telegram.ui.Profile.ProfileAvatarCollapseAnimation;
 import org.telegram.ui.Profile.ProfileAvatarExpandAnimation;
 import org.telegram.ui.Profile.ProfileAvatarInitialAnimation;
 import org.telegram.ui.Profile.ProfileAvatarPullDownAnimation;
@@ -317,7 +317,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -485,8 +484,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private HashMap<Integer, Integer> positionToOffset = new HashMap<>();
 
-    private float avatarX;
-    private float avatarY;
     private float avatarScale;
     //private float nameX;
     //private float nameY;
@@ -2389,6 +2386,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ProfileAvatarInitialAnimation profileAvatarInitialAnimation;
     private ProfileAvatarPullDownAnimation profileAvatarPullDownAnimation;
     private ProfileAvatarExpandAnimation profileAvatarExpandAnimation;
+    private ProfileAvatarCollapseAnimation profileAvatarCollapseAnimation;
 
     @Override
     public View createView(Context context) {
@@ -5621,6 +5619,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         profileAvatarInitialAnimation = new ProfileAvatarInitialAnimation(this, avatarContainer2, nameTextView, onlineTextView, avatarImage);
         profileAvatarPullDownAnimation = new ProfileAvatarPullDownAnimation(profileAvatarInitialAnimation);
         profileAvatarExpandAnimation = new ProfileAvatarExpandAnimation(avatarContainer2, nameTextView, onlineTextView, profileAvatarPullDownAnimation);
+        profileAvatarCollapseAnimation = new ProfileAvatarCollapseAnimation(this, profileAvatarInitialAnimation);
     }
 
     private void updateBottomButtonY() {
@@ -7494,14 +7493,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
 
-
-            avatarX = profileAvatarInitialAnimation.getAvatarTranslationXInitial(diff);
-            avatarY = profileAvatarInitialAnimation.getAvatarTranslationYInitial(diff);
-
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
             if (h > AndroidUtilities.dp(TOP_VIEW_EXTRA_HEIGHT_DP) || isPulledDown) {
                 pullDownAvatarAnimation(h, newTop);
             }
+
+            final float collapseProgress = 1.0f - diff;
 
             if (openAnimationInProgress && playProfileAnimation == 2) {
                 System.out.println("Animation type 2");
@@ -7566,8 +7563,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 updateCollectibleHint();
             } else if (extraHeight <= AndroidUtilities.dp(TOP_VIEW_EXTRA_HEIGHT_DP)) {
-                System.out.println("Animation type 1");
-                avatarScale = (42 + 18 * diff) / 42.0f; // TODO restore
+                System.out.println("Animation type 1, diff: " + diff + " openAnimationInProgress: " + openAnimationInProgress);
                 if (storyView != null) {
                     storyView.invalidate();
                 }
@@ -7576,10 +7572,22 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 float nameScale = profileAvatarInitialAnimation.getNameScale(diff);
                 if (expandAnimator == null || !expandAnimator.isRunning()) {
-                    //avatarContainer.setScaleX(avatarScale); TODO restore
-                    //avatarContainer.setScaleY(avatarScale);  TODO restore
-                    avatarContainer.setTranslationX(avatarX);
-                    avatarContainer.setTranslationY((float) Math.ceil(avatarY));
+                    if (!openAnimationInProgress) {
+                        avatarContainer.setScaleX(profileAvatarCollapseAnimation.getAvatarScale(collapseProgress));
+                        avatarContainer.setScaleY(profileAvatarCollapseAnimation.getAvatarScale(collapseProgress));
+                        avatarContainer.setTranslationX(profileAvatarCollapseAnimation.getAvatarTranslationX(collapseProgress));
+                        avatarContainer.setTranslationY(profileAvatarCollapseAnimation.getAvatarTranslationY(collapseProgress));
+                        avatarImage.setRelativeBlurRadius(profileAvatarCollapseAnimation.getAvatarBlurRelativeRadius(collapseProgress));
+                        avatarImage.updateBlackOverlayAlpha(profileAvatarCollapseAnimation.getAvatarBlackOverlayAlpha(collapseProgress));
+                    } else {
+                        avatarContainer.setScaleX(profileAvatarInitialAnimation.getAvatarScale(diff));
+                        avatarContainer.setScaleY(profileAvatarInitialAnimation.getAvatarScale(diff));
+                        avatarContainer.setTranslationX(profileAvatarInitialAnimation.getAvatarTranslationX(diff));
+                        avatarContainer.setTranslationY(profileAvatarInitialAnimation.getAvatarTranslationY(diff));
+                        avatarImage.disableBlur();
+                        avatarImage.updateBlackOverlayAlpha(0f);
+                    }
+
                     float extra = AndroidUtilities.dp(42) * avatarScale - AndroidUtilities.dp(42);
                     timeItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(16) + extra);
                     timeItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(15) + extra);
@@ -7590,9 +7598,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
 
 
-                final float nameY = profileAvatarInitialAnimation.getNameTranslationY(diff);
+                final float nameY;
 
-                onlineY = profileAvatarInitialAnimation.getOnlineTranslationY(diff);
+                if (openAnimationInProgress) {
+                    nameY = profileAvatarInitialAnimation.getNameTranslationY(diff);
+                    onlineY = profileAvatarInitialAnimation.getOnlineTranslationY(diff);
+                } else {
+                    nameY = profileAvatarCollapseAnimation.getNameTranslationY(collapseProgress);
+                    onlineY = profileAvatarCollapseAnimation.getOnlineTranslationY(collapseProgress);
+                }
 
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
@@ -7602,7 +7616,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (curNameTextView == null) {
                         continue;
                     }
-                    final float nameX = profileAvatarInitialAnimation.getNameTranslationX(a, diff);
+                    final float nameX;
+
+                    if (openAnimationInProgress) {
+                        nameX = profileAvatarInitialAnimation.getNameTranslationX(a, diff);
+                    } else {
+                        nameX = profileAvatarCollapseAnimation.getNameTranslationX(a, collapseProgress);
+                    }
 
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
                         curNameTextView.setTranslationX(nameX);
@@ -7610,7 +7630,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                         final SimpleTextView curOnlineTextView = onlineTextView[a];
 
-                        final float onlineX = profileAvatarInitialAnimation.getOnlineTranslationX(a, diff);
+                        final float onlineX;
+
+                        if (openAnimationInProgress) {
+                            onlineX = profileAvatarInitialAnimation.getOnlineTranslationX(a, diff);
+                        } else {
+                            onlineX = profileAvatarCollapseAnimation.getOnlineTranslationX(a, collapseProgress);
+                        }
 
                         curOnlineTextView.setTranslationX(onlineX);
                         curOnlineTextView.setTranslationY(onlineY);
