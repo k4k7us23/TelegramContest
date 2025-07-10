@@ -84,7 +84,7 @@ public class ProfileAvatarInitialAnimation {
 
     public float getOnlineTranslationY(float progress) {
         float nameY = getNameTranslationY(progress);
-        return nameY + AndroidUtilities.dp(ONLINE_VERTICAL_MARGIN_DP) * progress;
+        return nameY + AndroidUtilities.dp(ONLINE_VERTICAL_MARGIN_DP);
     }
 
     public float getNameTranslationY(float progress) {
