@@ -484,8 +484,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private HashMap<Integer, Integer> positionToOffset = new HashMap<>();
 
-    private float avatarX;
-    private float avatarY;
     private float avatarScale;
     //private float nameX;
     //private float nameY;
@@ -7495,10 +7493,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
 
-
-            avatarX = profileAvatarInitialAnimation.getAvatarTranslationX(diff);
-            avatarY = profileAvatarInitialAnimation.getAvatarTranslationY(diff);
-
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
             if (h > AndroidUtilities.dp(TOP_VIEW_EXTRA_HEIGHT_DP) || isPulledDown) {
                 pullDownAvatarAnimation(h, newTop);
@@ -7586,8 +7580,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         avatarImage.setRelativeBlurRadius(profileAvatarCollapseAnimation.getAvatarBlurRelativeRadius(collapseProgress));
                         avatarImage.updateBlackOverlayAlpha(profileAvatarCollapseAnimation.getAvatarBlackOverlayAlpha(collapseProgress));
                     } else {
-                        avatarContainer.setScaleX(1f);
-                        avatarContainer.setScaleY(1f);
+                        avatarContainer.setScaleX(profileAvatarInitialAnimation.getAvatarScale(diff));
+                        avatarContainer.setScaleY(profileAvatarInitialAnimation.getAvatarScale(diff));
                         avatarContainer.setTranslationX(profileAvatarInitialAnimation.getAvatarTranslationX(diff));
                         avatarContainer.setTranslationY(profileAvatarInitialAnimation.getAvatarTranslationY(diff));
                         avatarImage.disableBlur();
