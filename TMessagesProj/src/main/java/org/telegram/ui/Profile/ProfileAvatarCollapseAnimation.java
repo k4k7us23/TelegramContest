@@ -5,6 +5,7 @@ import android.view.animation.Interpolator;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Utilities;
+import org.telegram.ui.Components.Avatar.ProfileAvatarView;
 import org.telegram.ui.ProfileActivity;
 
 public class ProfileAvatarCollapseAnimation {
@@ -67,6 +68,10 @@ public class ProfileAvatarCollapseAnimation {
         } else {
             return BLUR_RELATIVE_RADIUS_END_VALUE;
         }
+    }
+
+    public float getVerticalBlurOffsetLimit() {
+        return ProfileAvatarView.NO_VERTICAL_BLUR_LIMIT;
     }
 
     public float getAvatarBlackOverlayAlpha(float progress) {
