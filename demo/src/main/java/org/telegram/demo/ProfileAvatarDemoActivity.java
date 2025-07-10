@@ -20,7 +20,7 @@ import org.telegram.ui.Components.AvatarDrawable;
 public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver.ImageReceiverDelegate {
 
     private ImageView imageView;
-    final int cornerRadius = AndroidUtilities.dp(20);
+    final int cornerRadius = AndroidUtilities.dp(30);
 
     private int currentAccount = UserConfig.selectedAccount;
     private ProfileAvatarView profileAvatarView;
@@ -29,9 +29,8 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final int imageSize = AndroidUtilities.dp(200);
+        final int imageSize = AndroidUtilities.dp(60);
         final float zoom = 1f;
-        final int blurRadius = 20;
 
         FrameLayout containerLayout = new FrameLayout(this);
 
@@ -58,7 +57,7 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
         profileAvatarView = new ProfileAvatarView(this);
         profileAvatarView.updateZoom(zoom);
         profileAvatarView.updateCornerRadius(cornerRadius);
-        profileAvatarView.updateBlurRadius(blurRadius);
+        profileAvatarView.setRelativeBlurRadius(0.2f);
         profileAvatarView.updateBlackOverlayAlpha(0.2f);
         FrameLayout.LayoutParams textureViewLp = new FrameLayout.LayoutParams(imageSize, imageSize);
         textureViewLp.topMargin = AndroidUtilities.dp(10);
@@ -113,7 +112,7 @@ public class ProfileAvatarDemoActivity extends Activity implements ImageReceiver
     }
 
     private void loadStaticImageIntoImageView() {
-        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "1.jpg");
+        Bitmap bitmap = BitmapUtils.loadBitmapFromAssets(this, "2.png");
         profileAvatarView.updateBitmap(bitmap);
         imageView.setImageBitmap(bitmap);
     }

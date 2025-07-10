@@ -14,6 +14,7 @@ public class ProfileAvatarInitialAnimation {
 
     public static final int INITIAL_AVATAR_SIZE_DP = 100;
     public static final int INITIAL_AVATAR_CORNER_SIZE_DP = INITIAL_AVATAR_SIZE_DP / 2;
+    public static final int ONLINE_VERTICAL_MARGIN_DP = 28;
 
     private final ProfileActivity profileActivity;
     private final FrameLayout avatarContainer2;
@@ -35,16 +36,24 @@ public class ProfileAvatarInitialAnimation {
         this.avatarImage = avatarImage;
     }
 
-    public float getAvatarTranslationXInitial(float progress) {
+    public float getAvatarTranslationX(float progress) {
         final float targetAvatarX = (avatarContainer2.getMeasuredWidth() - AndroidUtilities.dp(INITIAL_AVATAR_SIZE_DP)) / 2f;
 
         return lerp(0, targetAvatarX, progress);
     }
 
-    public float getAvatarTranslationYInitial(float progress) {
+    public float getAvatarTranslationXEnd() {
+        return getAvatarTranslationX(1f);
+    }
+
+    public float getAvatarTranslationY(float progress) {
         return (profileActivity.getActionBar().getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) +
                 (ActionBar.getCurrentActionBarHeight() / 2.0f - AndroidUtilities.dp(12)) * progress +
                 profileActivity.getActionBar().getTranslationY();
+    }
+
+    public float getAvatarTranslationYEnd() {
+        return getAvatarTranslationY(1f);
     }
 
     public float getNameScale(float progress) {
@@ -65,11 +74,11 @@ public class ProfileAvatarInitialAnimation {
 
     public float getOnlineTranslationY(float progress) {
         float nameY = getNameTranslationY(progress);
-        return nameY + AndroidUtilities.dp(28) * progress;
+        return nameY + AndroidUtilities.dp(ONLINE_VERTICAL_MARGIN_DP) * progress;
     }
 
     public float getNameTranslationY(float progress) {
-        float avatarY = getAvatarTranslationYInitial(progress);
+        float avatarY = getAvatarTranslationY(progress);
         return (float) Math.floor(avatarY) + (avatarImage.getHeight() * avatarImage.getScaleY() + AndroidUtilities.dp(12)) * progress;
     }
 

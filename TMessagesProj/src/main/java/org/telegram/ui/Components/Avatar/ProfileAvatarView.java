@@ -30,6 +30,7 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
     public static final float DEFAULT_BLUR_ALPHA = 1f;
     public static final float DEFAULT_VERTICAL_BLUR_LIMIT_BORDER_SIZE = 0f;
     public static final float DEFAULT_BLACK_OVERLAY_ALPHA = 0f;
+    public static final float NO_RELATIVE_BLUR_RADIUS = -1f;
 
     private final AvatarShaderLoader shaderLoader = new AvatarShaderLoader(ApplicationLoader.applicationLoaderInstance);
     private final ProfileAvatarGlErrorChecker glErrorChecker = new ProfileAvatarGlErrorChecker();
@@ -59,7 +60,7 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
 
     private Bitmap originalBitmap = null;
 
-    private float relativeBlurRadius = -1f;
+    private float relativeBlurRadius = NO_RELATIVE_BLUR_RADIUS;
 
     public void setRelativeBlurRadius(float relativeBlurRadius) {
         this.relativeBlurRadius = relativeBlurRadius;
@@ -72,9 +73,14 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         }
         if (newBlurRadius != null) {
             executeWhenGlThreadIsReady(() -> {
-                profileAvatarGlThread.updateBlurRadius(newBlurRadius.intValue());
+                profileAvatarGlThread.updateBlurRadius(Math.max(DEFAULT_BLUR_RADIUS, newBlurRadius.intValue()));
             });
         }
+    }
+
+    public void disableBlur() {
+        setRelativeBlurRadius(NO_RELATIVE_BLUR_RADIUS);
+        updateBlurRadius(DEFAULT_BLUR_RADIUS);
     }
 
     public void updateBitmap(Bitmap bitmap) {
@@ -93,7 +99,7 @@ public class ProfileAvatarView extends TextureView implements TextureView.Surfac
         }
         executeWhenGlThreadIsReady(() -> {
             if (newBlurRadius != null) {
-                profileAvatarGlThread.updateBlurRadius(newBlurRadius.intValue());
+                profileAvatarGlThread.updateBlurRadius(Math.max(DEFAULT_BLUR_RADIUS, newBlurRadius.intValue()));
             }
             profileAvatarGlThread.updateBitmap(bitmap);
         });
