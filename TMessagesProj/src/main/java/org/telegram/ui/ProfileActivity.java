@@ -7582,6 +7582,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         avatarContainer.setTranslationX(profileAvatarCollapseAnimation.getAvatarTranslationX(collapseProgress));
                         avatarContainer.setTranslationY(profileAvatarCollapseAnimation.getAvatarTranslationY(collapseProgress));
                         avatarImage.setRelativeBlurRadius(profileAvatarCollapseAnimation.getAvatarBlurRelativeRadius(collapseProgress));
+                        avatarImage.updateVerticalBlurLimit(profileAvatarCollapseAnimation.getVerticalBlurOffsetLimit());
                         avatarImage.updateBlackOverlayAlpha(profileAvatarCollapseAnimation.getAvatarBlackOverlayAlpha(collapseProgress));
                     } else {
                         avatarContainer.setScaleX(profileAvatarInitialAnimation.getAvatarScale(diff));
