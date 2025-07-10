@@ -333,6 +333,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public static final int NAME_LEFT_MARGIN_DP = 118;
     public static final int NAME_TOP_MARGIN_DP = -6;
     private final static int TOP_VIEW_EXTRA_HEIGHT_DP = 150;
+    private static final String AVATAR_IMAGE_SIZE_FILTER = "500_500";
+    private static final String AVATAR_IMAGE_SIZE_FILTER_SMALL = "50_50";
+    private static final String AVATAR_VIDEO_SIZE_FILTER = "50_50";
+
 
     private RecyclerListView listView;
     private RecyclerListView searchListView;
@@ -9943,9 +9947,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.setImageDrawable(vectorAvatarThumbDrawable);
                 } else if (videoThumbLocation != null && !user.photo.personal) {
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
-                    avatarImage.setImage(videoThumbLocation, "avatar", thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(videoThumbLocation, "avatar", thumbLocation, AVATAR_VIDEO_SIZE_FILTER, avatarDrawable, user);
                 } else {
-                    avatarImage.setImage(videoLocation, ImageLoader.AUTOPLAY_FILTER, thumbLocation, "1000_1000", avatarDrawable, user);
+                    avatarImage.setImage(videoLocation, ImageLoader.AUTOPLAY_FILTER, thumbLocation, AVATAR_IMAGE_SIZE_FILTER, avatarDrawable, user);
                 }
             }
 
@@ -9967,7 +9971,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     hasFallbackPhoto = true;
                     TLRPC.PhotoSize smallSize = FileLoader.getClosestPhotoSizeWithSize(getUserInfo().fallback_photo.sizes, 1000);
                     if (smallSize != null) {
-                        fallbackImage.setImage(ImageLocation.getForPhoto(smallSize, getUserInfo().fallback_photo), "50_50", (Drawable) null, 0, null, UserConfig.getInstance(currentAccount).getCurrentUser(), 0);
+                        fallbackImage.setImage(ImageLocation.getForPhoto(smallSize, getUserInfo().fallback_photo), AVATAR_IMAGE_SIZE_FILTER, (Drawable) null, 0, null, UserConfig.getInstance(currentAccount).getCurrentUser(), 0);
                     }
                 } else {
                     newString2 = LocaleController.getString(R.string.Online);
@@ -10488,8 +10492,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else {
                 filter = null;
             }
+
+            final String imageSize;
+            if (videoLocation != null) {
+                imageSize = AVATAR_VIDEO_SIZE_FILTER;
+            } else {
+                imageSize = AVATAR_IMAGE_SIZE_FILTER;
+            }
+
             if (avatarBig == null && !isTopic) {
-                avatarImage.setImage(videoLocation, filter, thumbLocation, "50_50", avatarDrawable, chat);
+                avatarImage.setImage(videoLocation, filter, thumbLocation, imageSize, avatarDrawable, chat);
             }
             if (imageLocation != null && (prevLoadedImageLocation == null || imageLocation.photoId != prevLoadedImageLocation.photoId)) {
                 prevLoadedImageLocation = imageLocation;
@@ -11337,7 +11349,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else {
                 avatar = smallSize.location;
                 avatarBig = bigSize.location;
-                avatarImage.setImage(ImageLocation.getForLocal(avatar), "50_50", avatarDrawable, null);
+                avatarImage.setImage(ImageLocation.getForLocal(avatar), AVATAR_IMAGE_SIZE_FILTER_SMALL, avatarDrawable, null);
                 if (setAvatarRow != -1) {
                     updateRowsIds();
                     if (listAdapter != null) {
